@@ -12,6 +12,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.2.10",
     "astro": "^5.17.1"
   }
 }

@@ -1,14 +1,66 @@
-:root {
-  /* Stable brand neutrals (design-brief.md). Signature accent is undecided -
-     intentionally not set here; keep the page mono until the palette is locked. */
-  --ink: #1e2228;
-  --ink-soft: #2a2e35;
-  --paper: #f4f1ec;
-  --muted: #9a9690;
-  --line: #3a3e45;
+/* Lokalverket design tokens. Derived from the brand brief
+   (~/Vault/Lokalverket/Brand/Brand guide/design-brief.md).
+   Hex values are provisional - final hues are an Affinity eye decision. See DESIGN.md. */
 
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --content-width: 40rem;
+@import '@fontsource-variable/space-grotesk';
+
+:root {
+  /* --- Base neutrals (locked) --- */
+  --ink: #1e2228; /* charcoal base, theme-color */
+  --ink-soft: #2a2e35; /* cards, sections, raised surfaces */
+  --line: #3a3e45; /* borders, dividers */
+  --paper: #f4f1ec; /* warm off-white, primary on dark */
+
+  /* Warm-grey ramp (body/UI on dark) */
+  --grey-100: #d9d6d1;
+  --grey-300: #b3afa8;
+  --grey-500: #8a8780;
+  --grey-700: #5c5a55;
+
+  /* --- Signature palette (resolved direction, hue provisional) --- */
+  --oxblood: #7a2e2a; /* material/craft - primary brand accent */
+  --oxblood-hi: #99403b; /* hover/active - provisional, tune in Affinity pass */
+  --petrol: #1f5a66; /* digital/precision - restrained secondary accent */
+
+  /* --- Semantic roles --- */
+  --color-bg: var(--ink);
+  --color-surface: var(--ink-soft);
+  --color-text: var(--paper);
+  --color-muted: var(--grey-500);
+  --color-accent: var(--oxblood);
+  --color-precision: var(--petrol);
+
+  /* --- Typography --- */
+  --font-wordmark: 'Space Grotesk Variable', system-ui, sans-serif;
+  --font-heading: 'Space Grotesk Variable', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace; /* specs/part numbers */
+
+  /* Type scale (1.25 minor third) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.563rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+  --text-4xl: clamp(2.5rem, 9vw, 4.5rem);
+
+  /* --- Spacing scale --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* --- Other --- */
+  --radius: 4px;
+  --content-width: 64rem;
+  --measure: 38rem; /* readable line length */
 }
 
 * {
@@ -18,14 +70,22 @@
 html {
   font-family: var(--font-body);
   line-height: 1.6;
-  color: var(--paper);
-  background: var(--ink);
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 body {
   margin: 0;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
 a {
-  color: var(--paper);
+  color: var(--color-text);
 }
