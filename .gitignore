@@ -1,0 +1,32 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# claude code (CLAUDE.md is tracked, local settings are not)
+.claude/
+
+# secrets and credentials
+*.pem
+*.key
+*.kdbx
+id_rsa
+id_ed25519
+credentials.json
