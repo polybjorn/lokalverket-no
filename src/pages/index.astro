@@ -1,8 +1,80 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+// Placeholder copy. Tagline carries the "what" (name says "where") - design-brief.md.
+const tagline = 'Design og produksjon';
 ---
 
-<Layout title="Lokalverket">
-  <h1>Lokalverket</h1>
-  <p>Nettsiden er under arbeid.</p>
+<Layout title="Lokalverket" description="Lokalverket - kommer snart.">
+  <main>
+    <p class="eyebrow">Kommer snart</p>
+    <h1 class="wordmark"><span class="lokal">lokal</span><span class="verket">verket</span></h1>
+    <p class="tagline">{tagline}</p>
+    <p class="contact">
+      <a href="mailto:post@lokalverket.no">post@lokalverket.no</a>
+    </p>
+  </main>
 </Layout>
+
+<style>
+  main {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    max-width: var(--content-width);
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .wordmark {
+    margin: 0;
+    font-size: clamp(2.5rem, 12vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .wordmark .lokal {
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .wordmark .verket {
+    color: var(--paper);
+    font-weight: 700;
+  }
+
+  .tagline {
+    margin: 0;
+    color: var(--paper);
+    font-size: 1.05rem;
+  }
+
+  .contact {
+    margin: 1.5rem 0 0;
+    font-size: 0.95rem;
+  }
+
+  .contact a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+  }
+
+  .contact a:hover {
+    color: var(--paper);
+  }
+</style>

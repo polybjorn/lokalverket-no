@@ -3,8 +3,7 @@
 Private repo. Norwegian-language site.
 
 > Skeleton. Fill in purpose, audience, content, and deploy specifics once the
-> Lokalverket context is settled. See `~/Vault/Obsidian/Software/Lokalverket.md`
-> if/when that note exists.
+> site direction is settled. Business context note: `~/Vault/Lokalverket/CLAUDE.md`.
 
 ## Stack
 
@@ -18,6 +17,10 @@ Private repo. Norwegian-language site.
 - `src/layouts/Layout.astro` - shared HTML shell (head, main wrapper)
 - `src/styles/global.css` - global styles and CSS variables
 - `public/` - static assets served as-is (favicon, images)
+- `assets/` - symlink to `~/Vault/Lokalverket/Brand` (gitignored). Source logos,
+  favicons, brand guide, colors. Copy what the site needs into `public/`;
+  don't reference the symlink from build output. Real favicons already exist at
+  `assets/Favicon/`
 
 ## Development
 
@@ -32,8 +35,13 @@ Private repo. Norwegian-language site.
 
 ## Deploy
 
-- TBD (polybjorn-en and rovar-no use GitHub Pages; decide host before launch)
+- Public repo, GitHub Pages via `.github/workflows/deploy.yml` (withastro/action ->
+  actions/deploy-pages). Push to `main` builds and deploys.
+- Custom domain: `public/CNAME` -> `lokalverket.no`. Pages source = GitHub Actions.
+- DNS for lokalverket.no is at Domeneshop (hyp.net), currently parked. To go live,
+  point it at GitHub Pages (A records 185.199.108-111.153 + CNAME for www), or move
+  the zone to Cloudflare and proxy it (the polybjorn.com/.no pattern) for CDN/SSL/analytics.
 
 ## Status
 
-Boilerplate only. Not yet deployed.
+Boilerplate only. DNS not yet pointed; not yet live.
