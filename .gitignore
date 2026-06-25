@@ -17,6 +17,9 @@ npm-debug.log*
 # macOS-specific files
 .DS_Store
 
+# asset library symlink (-> ~/Vault/Lokalverket/Brand)
+assets
+
 # jetbrains setting folder
 .idea/
 
