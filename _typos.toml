@@ -1,3 +1,13 @@
+# Norwegian words that collide with the English typos dictionary.
+# Add new ones here as Norwegian copy grows.
 [default.extend-words]
 lokal = "lokal"
 tekst = "tekst"
+tre = "tre"
+fram = "fram"
+produkt = "produkt"
+tak = "tak"
+ned = "ned"
+modell = "modell"
+presist = "presist"
+som = "som"

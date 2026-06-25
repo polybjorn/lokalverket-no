@@ -74,6 +74,8 @@ html {
   line-height: 1.6;
   color: var(--color-text);
   background: var(--color-bg);
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {

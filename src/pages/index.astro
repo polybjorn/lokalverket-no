@@ -1,83 +1,243 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// Placeholder copy. Tagline carries the "what" (name says "where") - design-brief.md.
-const tagline = 'Design og produksjon';
+// Placeholder copy throughout - structure is real, words are fillable.
+const services = [
+  {
+    title: 'Design & prototyping',
+    body: 'CAD-modellering og raske prototyper, slik at delen er riktig før den settes i produksjon.',
+  },
+  {
+    title: 'Additiv produksjon',
+    body: 'Funksjonelle deler i plast og kompositt med 3D-printing - fra enkeltdeler til små serier.',
+  },
+  {
+    title: 'Subtraktiv produksjon',
+    body: 'CNC-fresing av presise deler i plast, tre og mykere metaller, med stramme toleranser.',
+  },
+  {
+    title: 'Trearbeid & finish',
+    body: 'Bearbeiding, montering og etterbehandling fram til et ferdig, ferdigstilt produkt.',
+  },
+];
+
+const points = ['Lokal produksjon', 'Kort vei fra idé til del', 'Flere materialer og metoder'];
 ---
 
-<Layout title="Lokalverket" description="Lokalverket - kommer snart.">
-  <main>
-    <p class="eyebrow">Kommer snart</p>
-    <h1 class="wordmark"><span class="lokal">lokal</span><span class="verket">verket</span></h1>
-    <p class="tagline">{tagline}</p>
-    <p class="contact">
-      <a href="mailto:post@lokalverket.no">post@lokalverket.no</a>
-    </p>
+<Layout
+  title="Lokalverket - design og produksjon"
+  description="Lokalverket designer og produserer presisjonsdeler - 3D-printing, CNC-fresing og trearbeid."
+>
+  <header class="nav">
+    <a href="#top" class="brand"><span class="lokal">lokal</span><span class="verket">verket</span></a>
+    <nav class="nav-links">
+      <a href="#tjenester">Tjenester</a>
+      <a href="#om">Om</a>
+      <a href="#kontakt">Kontakt</a>
+      <a href="mailto:post@lokalverket.no" class="btn btn-accent btn-sm">Be om tilbud</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="kicker">Design &amp; produksjon</p>
+      <h1>Fra idé til ferdig del.</h1>
+      <p class="lead">
+        Lokalverket designer og produserer presisjonsdeler - 3D-printing, CNC-fresing og
+        trearbeid under ett tak.
+      </p>
+      <div class="cta-row">
+        <a href="mailto:post@lokalverket.no" class="btn btn-accent">Be om tilbud</a>
+        <a href="#tjenester" class="btn btn-ghost">Se tjenester</a>
+      </div>
+      <p class="spec">Additiv · Subtraktiv · Tre — toleranser ned til ±0.1 mm</p>
+    </section>
+
+    <section id="tjenester" class="band">
+      <p class="kicker">Tjenester</p>
+      <h2>Hva vi lager</h2>
+      <div class="grid">
+        {services.map((s) => (
+          <article class="card">
+            <h3>{s.title}</h3>
+            <p>{s.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section id="om" class="band">
+      <p class="kicker">Om oss</p>
+      <h2>Et verksted for design og produksjon</h2>
+      <div class="prose">
+        <p>
+          Lokalverket kombinerer design og fysisk produksjon i ett. Vi hjelper bedrifter og
+          privatpersoner fra idé og 3D-modell til ferdig produsert del - lokalt, presist og
+          uten unødvendige mellomledd.
+        </p>
+        <p>
+          Materialnøytralt av natur: vi velger metode og materiale etter hva delen faktisk
+          trenger, ikke etter hva som tilfeldigvis står på gulvet.
+        </p>
+      </div>
+      <ul class="points">
+        {points.map((p) => <li>{p}</li>)}
+      </ul>
+    </section>
+
+    <section id="kontakt" class="band">
+      <p class="kicker">Kontakt</p>
+      <h2>Har du en idé eller en tegning?</h2>
+      <p class="lead">Send oss en e-post, så finner vi ut av det sammen.</p>
+      <p class="contact">
+        <a href="mailto:post@lokalverket.no">post@lokalverket.no</a>
+      </p>
+    </section>
   </main>
+
+  <footer class="foot">
+    <span class="brand sm"><span class="lokal">lokal</span><span class="verket">verket</span></span>
+    <span class="foot-meta">Design og produksjon · © 2026 Lokalverket</span>
+  </footer>
 </Layout>
 
 <style>
-  main {
-    min-height: 100svh;
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-3);
-    text-align: center;
-    padding: var(--space-8) var(--space-6);
-    max-width: var(--measure);
-    margin: 0 auto;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-4) var(--space-6);
+    background: rgba(30, 34, 40, 0.82);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
   }
-
-  .eyebrow {
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.25em;
-    font-size: var(--text-xs);
-    font-family: var(--font-mono);
-    color: var(--color-muted);
-  }
-
-  .wordmark {
-    margin: 0;
+  .brand {
     font-family: var(--font-wordmark);
-    font-size: var(--text-4xl);
-    font-weight: 400;
-    letter-spacing: -0.03em;
+    font-size: var(--text-lg);
+    letter-spacing: -0.02em;
+    text-decoration: none;
     line-height: 1;
   }
-
-  .wordmark .lokal {
-    color: var(--grey-500);
-    font-weight: 300;
-  }
-
-  .wordmark .verket {
-    color: var(--paper);
-    font-weight: 700;
-  }
-
-  .tagline {
-    margin: 0;
-    color: var(--paper);
-    font-size: var(--text-lg);
-  }
-
-  .contact {
-    margin: var(--space-6) 0 0;
+  .brand .lokal { color: var(--grey-500); font-weight: 300; }
+  .brand .verket { color: var(--paper); font-weight: 700; }
+  .nav-links { display: flex; align-items: center; gap: var(--space-6); }
+  .nav-links a {
+    color: var(--grey-300);
+    text-decoration: none;
     font-size: var(--text-sm);
   }
+  .nav-links a:hover { color: var(--paper); }
 
+  main { max-width: var(--content-width); margin: 0 auto; padding: 0 var(--space-6); }
+
+  .kicker {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  .hero { padding: var(--space-24) 0 var(--space-16); max-width: var(--measure); }
+  .hero h1 {
+    font-size: var(--text-4xl);
+    color: var(--paper);
+    margin: 0 0 var(--space-6);
+  }
+  .lead { font-size: var(--text-lg); color: var(--grey-300); margin: 0 0 var(--space-8); }
+  .cta-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .spec {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-precision);
+    margin: var(--space-8) 0 0;
+  }
+
+  .band { padding: var(--space-16) 0; border-top: 1px solid var(--line); }
+  .band h2 {
+    font-size: var(--text-2xl);
+    color: var(--paper);
+    margin: 0 0 var(--space-8);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--space-6);
+  }
+  .card h3 { font-size: var(--text-lg); color: var(--paper); margin: 0 0 var(--space-3); }
+  .card p { color: var(--grey-300); margin: 0; font-size: var(--text-base); }
+
+  .prose { max-width: var(--measure); }
+  .prose p { color: var(--grey-300); margin: 0 0 var(--space-4); }
+  .points {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-8) 0 0;
+    display: flex;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+  .points li {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--frost);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--marine);
+  }
+
+  .contact { margin: var(--space-4) 0 0; font-size: var(--text-lg); }
   .contact a {
     color: var(--color-link);
     text-decoration: none;
     border-bottom: 1px solid var(--color-link);
     padding-bottom: 2px;
-    transition: color 0.15s ease;
   }
+  .contact a:hover { color: var(--paper); }
 
-  .contact a:hover {
-    color: var(--paper);
+  .foot {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-16);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .brand.sm { font-size: var(--text-base); }
+  .foot-meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-muted); }
+
+  .btn {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .btn-sm { font-size: var(--text-sm); padding: var(--space-2) var(--space-4); }
+  .btn-accent { background: var(--marine); color: var(--paper); }
+  .btn-accent:hover { background: var(--marine-hi); }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--paper); }
+  .btn-ghost:hover { background: var(--color-surface); }
+
+  @media (max-width: 560px) {
+    .nav-links a:not(.btn) { display: none; }
+    .hero { padding-top: var(--space-16); }
   }
 </style>
