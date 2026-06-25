@@ -2,7 +2,8 @@
    (~/Vault/Lokalverket/Brand/Brand guide/design-brief.md).
    Hex values are provisional - final hues are an Affinity eye decision. See DESIGN.md. */
 
-@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 
 :root {
   /* --- Base neutrals (locked) --- */
@@ -17,24 +18,25 @@
   --grey-500: #8a8780;
   --grey-700: #5c5a55;
 
-  /* --- Signature palette (resolved direction, hue provisional) --- */
-  --oxblood: #7a2e2a; /* material/craft - primary brand accent */
-  --oxblood-hi: #99403b; /* hover/active - provisional, tune in Affinity pass */
-  --petrol: #1f5a66; /* digital/precision - restrained secondary accent */
+  /* --- Signature: Nord blue (mono) --- */
+  --marine: #5e81ac; /* nord10 - primary accent: buttons, large accents */
+  --marine-hi: #6d90ba; /* hover/active */
+  --frost: #81a1c1; /* nord9 - links, small text, specs (higher contrast on dark) */
 
   /* --- Semantic roles --- */
   --color-bg: var(--ink);
   --color-surface: var(--ink-soft);
   --color-text: var(--paper);
   --color-muted: var(--grey-500);
-  --color-accent: var(--oxblood);
-  --color-precision: var(--petrol);
+  --color-accent: var(--marine);
+  --color-link: var(--frost);
+  --color-precision: var(--frost);
 
   /* --- Typography --- */
-  --font-wordmark: 'Space Grotesk Variable', system-ui, sans-serif;
-  --font-heading: 'Space Grotesk Variable', system-ui, sans-serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace; /* specs/part numbers */
+  --font-wordmark: 'Geist Variable', system-ui, sans-serif;
+  --font-heading: 'Geist Variable', system-ui, sans-serif;
+  --font-body: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace; /* specs/part numbers */
 
   /* Type scale (1.25 minor third) */
   --text-xs: 0.75rem;

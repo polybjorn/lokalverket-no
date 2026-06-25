@@ -19,9 +19,9 @@ steers everything below: dark base, restrained accent, confident grotesque type.
 |----------|-------|------|
 | Strategy: clean break from polybjorn | locked | no amber reuse |
 | Base neutrals (ink/paper/grey ramp) | locked | |
-| Signature: oxblood + petrol accent | resolved | final hue is an Affinity eye decision; hexes here are provisional |
+| Signature: Nord marine blue (mono) | resolved | marine #5E81AC primary, frost #81A1C1 links/small text; replaced oxblood+petrol (failed in dark mode) 2026-06-25 |
 | Wordmark treatment (`lokal` light + `verket` bold) | locked | |
-| Typeface: confident grotesque (Space Grotesk) | locked (web) | |
+| Typeface: Geist (sans) + Geist Mono (precision accent) | locked (web) | confident grotesque |
 | Wordmark case: lowercase | locked | |
 | Symbol / logo mark (C/E/D) | open | Affinity work; favicon is a placeholder until then |
 
@@ -34,24 +34,25 @@ steers everything below: dark base, restrained accent, confident grotesque type.
 | `--line` | `#3a3e45` | Borders, dividers |
 | `--paper` | `#f4f1ec` | Primary text on dark |
 | `--grey-100/300/500/700` | ramp | Body/UI greys on dark |
-| `--oxblood` | `#7a2e2a` | Primary accent - material/craft side |
-| `--petrol` | `#1f5a66` | Secondary accent - digital/precision side, used sparingly |
+| `--marine` | `#5e81ac` | Nord10. Primary accent - buttons, large accents |
+| `--marine-hi` | `#6d90ba` | Accent hover/active |
+| `--frost` | `#81a1c1` | Nord9. Links and small text - brighter for AA contrast on dark |
 
 Semantic aliases: `--color-bg`, `--color-surface`, `--color-text`, `--color-muted`,
-`--color-accent` (oxblood), `--color-precision` (petrol). Style against the semantic
-roles where possible.
+`--color-accent` (marine), `--color-link` (frost), `--color-precision` (frost). Style
+against the semantic roles where possible.
 
-Accent discipline: oxblood for brand/craft moments, petrol reserved for
-precision/technical UI (specs, part numbers, captions). Don't let either dominate -
-the page is mostly charcoal + paper.
+Accent discipline: mono-blue system. Marine for buttons and larger accent moments;
+frost for links, small text, and spec/mono captions (it clears AA on charcoal where
+marine dips below). Warm paper neutral keeps the cool blue from feeling clinical.
+The page stays mostly charcoal + paper - blue is the accent, not the field.
 
 ## Typography
 
-- **Wordmark + headings:** Space Grotesk (`--font-wordmark` / `--font-heading`),
-  self-hosted via `@fontsource-variable/space-grotesk` (weights 300-700).
-- **Body:** system sans (`--font-body`). Can move to a matched grotesque later.
-- **Mono accent:** system mono (`--font-mono`) for specs/part-numbers/captions -
-  reinforces the precision side without a font download.
+- **Wordmark + headings + body:** Geist (`--font-wordmark` / `--font-heading` /
+  `--font-body`), self-hosted via `@fontsource-variable/geist`.
+- **Mono accent:** Geist Mono (`--font-mono`) via `@fontsource-variable/geist-mono`,
+  for specs/part-numbers/captions - the precision side of the system.
 
 Wordmark: lowercase, `lokal` weight 300 / muted grey, `verket` weight 700 / paper.
 

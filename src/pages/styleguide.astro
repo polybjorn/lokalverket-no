@@ -1,0 +1,140 @@
+---
+// Dev-only design reference. Remove or noindex before merging design -> main.
+import Layout from '../layouts/Layout.astro';
+
+const swatches = [
+  { name: '--ink', val: '#1e2228', role: 'base bg' },
+  { name: '--ink-soft', val: '#2a2e35', role: 'surface' },
+  { name: '--line', val: '#3a3e45', role: 'border' },
+  { name: '--paper', val: '#f4f1ec', role: 'text' },
+  { name: '--grey-300', val: '#b3afa8', role: 'grey' },
+  { name: '--grey-500', val: '#8a8780', role: 'muted' },
+  { name: '--marine', val: '#5e81ac', role: 'accent' },
+  { name: '--marine-hi', val: '#6d90ba', role: 'accent hover' },
+  { name: '--frost', val: '#81a1c1', role: 'links / small text' },
+];
+
+const scale = [
+  { token: '--text-4xl', label: 'lokalverket' },
+  { token: '--text-2xl', label: 'Section heading' },
+  { token: '--text-xl', label: 'Subheading' },
+  { token: '--text-lg', label: 'Lead paragraph' },
+  { token: '--text-base', label: 'Body text' },
+  { token: '--text-sm', label: 'Small / caption' },
+];
+---
+
+<Layout title="Styleguide - Lokalverket">
+  <main>
+    <p class="kicker">Design tokens</p>
+
+    <section>
+      <h2>Wordmark</h2>
+      <p class="wordmark"><span class="lokal">lokal</span><span class="verket">verket</span></p>
+    </section>
+
+    <section>
+      <h2>Colour</h2>
+      <div class="swatches">
+        {swatches.map((s) => (
+          <div class="swatch">
+            <div class="chip" style={`background:${s.val}`}></div>
+            <code>{s.name}</code>
+            <span class="meta">{s.val} · {s.role}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section>
+      <h2>Type scale (Geist)</h2>
+      {scale.map((t) => (
+        <p class="scale-row" style={`font-size:var(${t.token})`}>{t.label} <span class="meta">{t.token}</span></p>
+      ))}
+      <p class="mono">Geist Mono · part no. LV-2026-0042 · 120 × 80 mm</p>
+    </section>
+
+    <section>
+      <h2>Buttons</h2>
+      <div class="btns">
+        <button class="btn btn-accent">Primær</button>
+        <button class="btn btn-ghost">Sekundær</button>
+        <button class="btn btn-precision">Lenke</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Surface</h2>
+      <div class="card">
+        <h3>Kort</h3>
+        <p>Tekst på <code>--ink-soft</code> med <code>--line</code> kant. Lenke i <a href="#">frost</a>.</p>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+  .kicker {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    margin: 0 0 var(--space-12);
+  }
+  section { margin-bottom: var(--space-16); }
+  h2 {
+    font-size: var(--text-xl);
+    color: var(--paper);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-2);
+    margin: 0 0 var(--space-6);
+  }
+  .wordmark { margin: 0; font-size: var(--text-4xl); line-height: 1; letter-spacing: -0.03em; }
+  .wordmark .lokal { color: var(--grey-500); font-weight: 300; }
+  .wordmark .verket { color: var(--paper); font-weight: 700; }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-4);
+  }
+  .swatch { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chip { height: 64px; border-radius: var(--radius); border: 1px solid var(--line); }
+  code { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--paper); }
+  .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-muted); }
+
+  .scale-row { margin: 0 0 var(--space-3); color: var(--paper); line-height: 1.2; }
+  .mono { font-family: var(--font-mono); color: var(--color-precision); margin-top: var(--space-6); }
+
+  .btns { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .btn-accent { background: var(--marine); color: var(--paper); }
+  .btn-accent:hover { background: var(--marine-hi); }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--paper); }
+  .btn-ghost:hover { background: var(--ink-soft); }
+  .btn-precision { background: transparent; border-color: var(--frost); color: var(--frost); }
+
+  .card {
+    background: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--space-6);
+    max-width: var(--measure);
+  }
+  .card h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); color: var(--paper); }
+  .card p { margin: 0; color: var(--grey-300); }
+  .card a { color: var(--color-link); }
+</style>
