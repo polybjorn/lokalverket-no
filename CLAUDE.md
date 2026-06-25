@@ -33,6 +33,13 @@ Private repo. Norwegian-language site.
 - Minimal comments, only when logic isn't self-evident
 - Vanilla JS/CSS, avoid frameworks
 
+## Branches
+
+- `main` = live site. Every push to `main` deploys to GitHub Pages. Currently the
+  coming-soon page.
+- `design` = work-in-progress homepage. Does NOT deploy. Push WIP freely here;
+  merge `design` -> `main` only when the real site is ready to go live.
+
 ## Deploy
 
 - Public repo, GitHub Pages via `.github/workflows/deploy.yml` (withastro/action ->
