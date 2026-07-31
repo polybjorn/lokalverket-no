@@ -33,13 +33,25 @@ Public repo, Norwegian-language site. Business context note:
 
 ## Branches
 
-- `main` = live site. Every push to `main` deploys to GitHub Pages.
-- `design` = work in progress. Does NOT deploy. Push WIP freely here, then merge
-  `design` -> `main` when a change is ready to be public.
-- **`main` serves the homepage and nothing else.** The repo is public and the
-  domain is live, so anything that lands in `src/pages/` on `main` is published.
-  Keep internal design material (swatch/token reference pages) off this branch -
-  `styleguide.astro` was deliberately left out of the 2026-07-31 merge.
+**Single branch: `main`.** Every push deploys to GitHub Pages. Preview locally
+with `npm run dev` rather than pushing WIP; if a change ever needs to live
+off-machine before it's ready, cut a short-lived branch and delete it on merge.
+(A standing `design` branch existed until 2026-07-31 and was dropped - it made
+the merge, not the code, the risky step, and it never actually kept anything
+private: the repo is public, so a file on any pushed branch is readable.)
+
+**The repo is public and the domain is live**, so treat both as published:
+
+- Anything under `src/pages/` on `main` is **served** at lokalverket.no.
+- Anything committed at all is **readable on GitHub**, on any branch.
+
+Internal design material must therefore stay out of the repo entirely, not just
+out of `src/pages/`. `src/pages/styleguide.astro` is the worked example: a
+gitignored symlink to `~/Vault/Lokalverket/Brand/Brand guide/styleguide.astro`,
+so it renders at `localhost:4321/styleguide` off the live `global.css` (no
+drifting copy) while never reaching a CI checkout. Its import is root-relative
+(`/src/layouts/Layout.astro`) because Vite resolves through the symlink to the
+Vault path, where `../layouts` doesn't exist.
 
 ## Deploy
 
