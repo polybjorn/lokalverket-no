@@ -9,9 +9,9 @@ variables, never hard-coded values.
 
 ## Positioning
 
-Commercial precision production house (design + make). Premium, engineered,
-material-neutral. Deliberately *not* the warm community maker-fair look. This
-steers everything below: dark base, restrained accent, confident grotesque type.
+Lives in the brand brief (`~/Vault/Lokalverket/Brand/Brand guide/design-brief.md`),
+not here - this repo is public. What it dictates for the site: dark base,
+restrained accent, confident grotesque type.
 
 ## Status of decisions
 
