@@ -18,4 +18,4 @@ npm run build    # Static output to dist/
 
 ## Status
 
-Boilerplate. Not yet deployed.
+Work in progress. The live site serves a holding page and is set to `noindex`.

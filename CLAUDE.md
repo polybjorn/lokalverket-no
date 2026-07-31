@@ -66,6 +66,13 @@ Vault path, where `../layouts` doesn't exist.
 
 ## Status
 
-Live at `https://lokalverket.no` serving the homepage (hero / tjenester / om /
-kontakt) from `main`. Still pre-launch in the sense that the logo mark is
-unresolved and the favicon is a placeholder - see DESIGN.md.
+Live at `https://lokalverket.no`, serving a work-in-progress holding page and
+carrying a site-wide `noindex`. The full homepage (hero / tjenester / om /
+kontakt) was pulled back on 2026-07-31: it made firm claims (named services, a
+±0.1 mm tolerance, an offer CTA) on placeholder copy, while the logo mark is
+unresolved and the AS is not registered. It is parked in git history at
+`a1b31c9` - `git show a1b31c9:src/pages/index.astro` restores it.
+
+Before it goes back up: settle the copy, land the real brand mark (DESIGN.md),
+have an org.nr. Then drop the `noindex` in `src/layouts/Layout.astro` and the
+explanatory note in `public/robots.txt`.
