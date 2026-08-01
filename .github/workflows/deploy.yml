@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: withastro/action@v3
+        with:
+          # The action defaults to Node 20; Astro 7 requires >=22.12.0.
+          node-version: 24
 
   deploy:
     needs: build
