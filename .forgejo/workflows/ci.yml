@@ -1,0 +1,18 @@
+# Build gate on the self-hosted runner (media-runner, docker label ->
+# node:22-bookworm). No test suite here yet - this proves the site builds on
+# the forge the push lands on. GitHub Pages deploy stays in
+# .github/workflows/deploy.yml, running off the push mirror.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run build
