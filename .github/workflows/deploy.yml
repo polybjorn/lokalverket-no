@@ -21,8 +21,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: withastro/action@v3
         with:
-          # The action defaults to Node 20; Astro 7 requires >=22.12.0.
-          node-version: 24
+          # The action defaults to Node 20 and Astro 7 requires >=22.12.0, so
+          # this has to be set. It reads .nvmrc rather than repeating the number,
+          # so the version the live site is built with is stated in one place and
+          # can be checked against the forge runner once that runner is on the
+          # same version. polybjorn-en pins it the same way.
+          node-version-file: .nvmrc
 
   deploy:
     needs: build
