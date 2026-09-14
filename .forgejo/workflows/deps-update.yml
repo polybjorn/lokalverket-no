@@ -44,9 +44,10 @@ jobs:
       #
       # It also makes a manual dispatch a real test of the secret rather than of
       # npm, which is how this check earns its place on a run that has no work.
-      - name: FORGE_PR_TOKEN resolves
+      - name: FORGE_PR_TOKEN can actually read pulls
         env:
           PR_TOKEN: ${{ secrets.FORGE_PR_TOKEN }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
         run: |
           set -eu
           if [ -z "${PR_TOKEN:-}" ]; then
@@ -56,9 +57,30 @@ jobs:
             echo "'Can not read pulls' for it, which is the whole reason this exists."
             exit 1
           fi
-          # Length only. The value must never reach a log: this one is readable
-          # by anyone who can read the repo.
-          echo "FORGE_PR_TOKEN resolved, ${#PR_TOKEN} characters"
+          # A non-empty variable is not a working credential, and this step used
+          # to check only that - it printed ${#PR_TOKEN} and called it verified.
+          # The polybjorn-en session shipped the same check, watched it pass, and
+          # then watched the job spend two minutes of real work before dying on a
+          # 403 from the very endpoint it had claimed to have checked. Its token
+          # had no issue scope: `token does not have at least one of required
+          # scope(s): [read:issue]`.
+          #
+          # So make the request the job depends on, now, while failing is cheap.
+          # Token via a config file rather than argv, as everywhere else here.
+          umask 077
+          printf 'header = "Authorization: token %s"\n' "$PR_TOKEN" > /tmp/curlrc
+          code=$(curl -s -o /tmp/probe.json -w '%{http_code}' -K /tmp/curlrc "$API/pulls?state=open&limit=1")
+          if [ "$code" != 200 ]; then
+            echo "FORGE_PR_TOKEN cannot read pulls on this repo: HTTP $code"
+            head -c 300 /tmp/probe.json || true
+            echo ""
+            echo "It needs write:repository covering this repo. A scope error names"
+            echo "the scope it wanted, which is the fastest thing to read here."
+            exit 1
+          fi
+          # Length only, never the value: this log is readable by anyone who can
+          # read the repo.
+          echo "FORGE_PR_TOKEN resolved (${#PR_TOKEN} chars) and can read pulls"
 
       - name: Registry answers
         run: npm ping
