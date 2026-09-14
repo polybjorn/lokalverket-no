@@ -21,6 +21,14 @@ Public repo, Norwegian-language site. Business context note:
   is unresolved (candidates in `assets/Logos/Candidates/`, itself flagged interim)
   and `public/favicon.svg` is a placeholder "L" tile. DESIGN.md tracks it; the
   mark gets drawn in Affinity, not hand-edited here
+- `.forgejo/workflows/` - the gate on the self-hosted runner. Not the deploy;
+  see below. `ci.yml` builds and lints, `delete-merged-branch.yml` removes a
+  merged head branch, `deps-update.yml` opens the monthly dependency PR,
+  `merge-audit.yml` checks merges actually landed
+- `.nvmrc` - the node version, in one place. Both the gate and the Pages deploy
+  read it; `ci.yml` fails if the runner disagrees with it
+- `check-attribution.sh`, `check-workflow-inputs.sh`, `check-merged-prs.mjs` -
+  the checks the gate runs. Each is runnable by hand, which is the point
 - [`DESIGN.md`](DESIGN.md) - how the site applies the brand (tokens, type,
   colour, decision status). The authoritative source is
   `~/Vault/Lokalverket/Brand/Brand guide/design-brief.md`; when they disagree,
@@ -33,12 +41,23 @@ Public repo, Norwegian-language site. Business context note:
 
 ## Branches
 
-**Single branch: `main`.** Every push deploys to GitHub Pages. Preview locally
-with `npm run dev` rather than pushing WIP; if a change ever needs to live
-off-machine before it's ready, cut a short-lived branch and delete it on merge.
-(A standing `design` branch existed until 2026-07-31 and was dropped - it made
-the merge, not the code, the risky step, and it never actually kept anything
-private: the repo is public, so a file on any pushed branch is readable.)
+**`main` is where the site lives.** Every push to it deploys to GitHub Pages.
+Preview locally with `npm run dev` rather than pushing WIP; if a change ever
+needs to live off-machine before it's ready, cut a short-lived branch and delete
+it on merge - `delete-merged-branch.yml` does that automatically for `herd/*`.
+
+Two kinds of branch are expected to exist and are not WIP:
+
+- `herd/<topic>` - agent work, deleted on merge
+- `deps-update` - the rolling branch `deps-update.yml` force-pushes each month.
+  It is deliberately outside the `herd/` prefix so the cleanup job leaves it
+  alone; it is meant to persist and be reused, not deleted
+
+This said "single branch: `main`" until 2026-09-14, and stopped being true when
+the scheduled dependency job landed. Before that, a standing `design` branch
+existed until 2026-07-31 and was dropped - it made the merge, not the code, the
+risky step, and it never actually kept anything private: the repo is public, so
+a file on any pushed branch is readable.
 
 **The repo is public and the domain is live**, so treat both as published:
 
@@ -57,6 +76,11 @@ Vault path, where `../layouts` doesn't exist.
 
 - GitHub Pages via `.github/workflows/deploy.yml` (withastro/action ->
   actions/deploy-pages). Push to `main` builds and deploys. Pages source = GitHub Actions.
+- **The forge gate and the deploy are different builds on different runners**,
+  and only the deploy publishes. `withastro/action` takes a `node-version` and
+  has no `node-version-file`, so `deploy.yml` reads `.nvmrc` into a step output
+  and passes that - an unknown input there is ignored silently rather than
+  rejected, which once dropped the pin and broke a deploy with the gate green.
 - Custom domain `lokalverket.no` (`public/CNAME`), **already live**: DNS is at
   Domeneshop (hyp.net) with the four GitHub Pages A records (185.199.108-111.153)
   and `www` CNAMEd to `polybjorn.github.io`. HTTPS enforced, cert issued for both
