@@ -6,26 +6,34 @@
 # Only branches under herd/ are touched, and only when the PR actually merged.
 # A closed-unmerged PR, anyone else's branch and main are all left alone.
 #
-# Two things here look redundant and are not. Both come from #16, and the
+# Three things here look redundant and are not. All come from #16, and the
 # reasoning is the rovar-no session's (its #16 / PR #17); this is that shape
 # adapted rather than a second solution to the same problem.
 #
-# 1. The guard is in the script, not in the job `if:`. This forge's
-#    actions/tasks response has a `status` field and no `conclusion` field at
-#    all, so from that listing a job skipped by its `if:` and a job that ran and
-#    deleted something read as the same word. A guard that quietly stops
-#    matching then produces a green tick over nothing.
+# 1. THE ONE THAT ACTUALLY BIT. Forgejo answered a DELETE with 204 and did not
+#    delete the branch. That is read off the job log of rovar-no PR #15, which
+#    says `deleted herd/deps-update (204)` for a branch still on the remote
+#    afterwards. So a 2xx from this endpoint is not evidence of anything, and
+#    the GET below is unconditional rather than a fallback: the job asks what is
+#    true at the end instead of trusting what it was told. Success here means
+#    the branch is gone.
 #
-#    Job logs ARE readable here, unlike on rovar-no where the same check was
-#    written: GET /actions/jobs/{job_id}/logs returns 200 for the agent token,
-#    with the job id from /actions/runs/{run_id}/jobs rather than from the tasks
-#    listing. So a green tick on this repo can still be interrogated. It takes a
-#    second call and someone deciding to make it, which is why the guard moves
-#    anyway.
+# 2. The guard is in the script rather than the job `if:`. This was the first
+#    theory for the failure above and turned out to be wrong, but it stands on
+#    its own: this forge's actions/tasks response carries a `status` field and
+#    no `conclusion` field, so from that listing a job skipped by its `if:` and
+#    a job that ran and deleted a branch read as the same word. The script now
+#    says out loud which case it took.
 #
-# 2. The job asks what is true at the end instead of trusting the status it got
-#    back, so success here means the branch is gone rather than the API having
-#    answered something recognisable.
+#    Job logs ARE readable here, unlike on rovar-no where this check was first
+#    written: GET /actions/jobs/{job_id}/logs returns 200 for the agent token.
+#    The job id comes from /actions/runs/{run_id}/jobs and is a different id
+#    space from the `id` in the /actions/tasks listing - feeding a task id to
+#    the logs endpoint can silently return a different job's log.
+#
+# 3. The DELETE status is still reported in the log line even though nothing
+#    branches on it, because "gone, and the API said 500" and "gone, and the
+#    API said 204" are different stories if this ever needs diagnosing again.
 name: Delete merged branch
 
 on:
