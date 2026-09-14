@@ -60,8 +60,15 @@ const gitOk = (...args) => {
 //
 // The workflow fetches too; this is here because the script is meant to be run by
 // hand, and by hand is where the stale clone lives.
+// Split at the FIRST slash only, and only when the leading segment is really a
+// configured remote. Every branch in this repo is herd/<topic>, so a plain
+// `--ref herd/some-branch` would otherwise be read as remote "herd" branch
+// "some-branch", fail to fetch, and refuse to run on a perfectly good local ref.
+// `origin/release/7.x` has to keep its slashes, which is why the branch half is
+// greedy. Both cases raised by the rovar-no session, which tests them.
+const remotes = new Set(git("remote").split("\n").filter(Boolean));
 const remoteRef = /^([^/]+)\/(.+)$/.exec(ref);
-if (remoteRef) {
+if (remoteRef && remotes.has(remoteRef[1])) {
   const [, remote, branch] = remoteRef;
   if (!gitOk("fetch", "--quiet", remote, branch)) {
     console.error(`could not fetch ${branch} from ${remote}, so ${ref} may be stale.`);
@@ -69,6 +76,11 @@ if (remoteRef) {
     console.error("so this refuses rather than answering from what is on disk.");
     process.exit(2);
   }
+} else {
+  // A local branch, a raw sha, or a root commit used to exercise the failure
+  // path. Read as it stands - but say so, because "this was not refreshed" is
+  // the one thing that would explain a surprising result.
+  console.log(`${ref} is not a remote-tracking ref; reading it as it stands`);
 }
 
 if (git("rev-parse", "--is-shallow-repository") === "true") {

@@ -52,8 +52,10 @@ jobs:
           TOKEN: ${{ secrets.FORGE_PR_TOKEN }}
         run: |
           set -eu
-          # checkout leaves a detached HEAD; the script compares against a
-          # remote-tracking ref, so make sure it is current rather than whatever
-          # the clone happened to bring.
-          git fetch --quiet origin main
+          # No `git fetch` here on purpose. The script refreshes the ref itself,
+          # and having it in both places means two things that must agree and
+          # eventually will not. Worse, when the fetch lived only here, CI was the
+          # one execution path that was correct and every hand-run was judged
+          # against a stale clone - so the fault would have survived any amount of
+          # "I ran it locally and it was fine".
           ./check-merged-prs.mjs --days 7 --ref origin/main
