@@ -1,8 +1,14 @@
 # actionlint knows GitHub's hosted runner labels and nothing else, so every
 # `runs-on:` in .forgejo/workflows reads as an unknown label without this.
-# These three are the labels the forge runner registers, defined in nixfleet
-# modules/forgejo-runner.nix; the name on each side has to match or Forgejo
-# never schedules the job.
+# Measured: three errors before this file existed, zero after.
+#
+# The three names are the ones nixfleet modules/forgejo-runner.nix lists for
+# this runner, read from that file. Its own comment adds that a label also has
+# to be registered server-side under the same name, because scheduling matches
+# the server record rather than the runner's list - that part is quoted from
+# nixfleet and is not something testable from this repo, which has no way to
+# see the registration. If a job here ever queues forever on a label that looks
+# right, that claim is the first thing to go and check rather than trust.
 self-hosted-runner:
   labels:
     - docker
