@@ -47,8 +47,30 @@ const gitOk = (...args) => {
 // asked: the merge commits fetch fine, but main's history is truncated, so
 // `--is-ancestor` says no for nearly all of them. Measured on a --depth 1 clone
 // of a repo with zero real orphans: it reported six of twelve as ORPHANED and
-// exited 1. A watchdog that cries wolf gets muted, and then the real one is
+// exited 1. The rovar-no session re-measured on its own clone and got 13 of 14,
+// so this gets worse with repo age, not better - and 13 of 14 is the shape nobody
+// reads twice. A watchdog that cries wolf gets muted, and then the real one is
 // invisible too - so refuse rather than guess.
+// Refresh the ref before judging against it. A stale remote-tracking ref invents
+// orphans exactly like a shallow clone does: anything merged after the last fetch
+// is genuinely not an ancestor of the copy on disk. I hit this within minutes of
+// writing this script - a scratch clone twenty minutes old reported a real,
+// correctly-merged pull request as ORPHANED, and the only reason it was not passed
+// on as a finding is that the number looked wrong for a repo known to be clean.
+//
+// The workflow fetches too; this is here because the script is meant to be run by
+// hand, and by hand is where the stale clone lives.
+const remoteRef = /^([^/]+)\/(.+)$/.exec(ref);
+if (remoteRef) {
+  const [, remote, branch] = remoteRef;
+  if (!gitOk("fetch", "--quiet", remote, branch)) {
+    console.error(`could not fetch ${branch} from ${remote}, so ${ref} may be stale.`);
+    console.error("A stale ref reports correctly-merged pull requests as orphaned,");
+    console.error("so this refuses rather than answering from what is on disk.");
+    process.exit(2);
+  }
+}
+
 if (git("rev-parse", "--is-shallow-repository") === "true") {
   console.error("this is a shallow clone, so reachability cannot be decided here.");
   console.error("Nearly every merge would be reported as orphaned.");
@@ -58,14 +80,45 @@ if (git("rev-parse", "--is-shallow-repository") === "true") {
 
 const since = Date.now() - days * 86400_000;
 
-const res = await fetch(`${api}/pulls?state=closed&limit=50&sort=recentupdate`, {
-  headers: { Authorization: `token ${token}` },
-});
-if (!res.ok) {
-  console.error(`could not list pulls: ${res.status} ${res.statusText}`);
+// Paged, not a single ?limit=50. One page is correct until the 51st closed pull
+// request and then quietly stops being: the script would report "all reachable"
+// about pull requests it never read. Inside a tool whose whole purpose is
+// catching an operation that reports success without doing the work, that is the
+// same fault one level up. Raised by the rovar-no session while porting this.
+//
+// `sort=recentupdate` is descending by `updated_at`, confirmed against this forge.
+// Merging updates a pull request, so `merged_at <= updated_at`, which makes a full
+// page whose oldest `updated_at` predates the window a proof that no later page
+// can hold anything inside it. A short page means the list simply ended.
+const perPage = 50;
+const maxPages = 20;
+const closed = [];
+let reachedBoundary = false;
+
+for (let page = 1; page <= maxPages; page++) {
+  const url = `${api}/pulls?state=closed&limit=${perPage}&page=${page}&sort=recentupdate`;
+  const res = await fetch(url, { headers: { Authorization: `token ${token}` } });
+  if (!res.ok) {
+    console.error(`could not list pulls (page ${page}): ${res.status} ${res.statusText}`);
+    process.exit(2);
+  }
+  const batch = await res.json();
+  closed.push(...batch);
+  if (batch.length < perPage) { reachedBoundary = true; break; }
+  const oldest = Math.min(...batch.map((p) => Date.parse(p.updated_at)));
+  if (oldest < since) { reachedBoundary = true; break; }
+}
+
+// Refuse rather than truncate. A capped loop that silently stops early would
+// just relocate the bug this paging exists to remove.
+if (!reachedBoundary) {
+  console.error(`read ${maxPages} pages of closed pulls without reaching the ${days}-day boundary.`);
+  console.error("Reporting nothing found would be a lie, so this is a failure, not a pass.");
+  console.error("Raise maxPages, or narrow --days.");
   process.exit(2);
 }
-const merged = (await res.json()).filter(
+
+const merged = closed.filter(
   (p) => p.merged && p.merge_commit_sha && Date.parse(p.merged_at) >= since,
 );
 

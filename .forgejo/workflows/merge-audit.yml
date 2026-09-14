@@ -35,21 +35,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Before the work, not after. A job that cannot reach the API should say so
-      # in its first seconds rather than looking like a clean audit - which is
-      # exactly the failure mode this job exists to remove.
-      - name: FORGE_PR_TOKEN resolves
-        env:
-          PR_TOKEN: ${{ secrets.FORGE_PR_TOKEN }}
-        run: |
-          set -eu
-          if [ -z "${PR_TOKEN:-}" ]; then
-            echo "FORGE_PR_TOKEN is empty or not visible to this repo."
-            echo "Reading pulls needs it; the automatic Actions token is answered"
-            echo "404 'Can not read pulls' on this forge."
-            exit 1
-          fi
-          echo "FORGE_PR_TOKEN resolved, ${#PR_TOKEN} characters"
+      # There is deliberately no separate credential-check step here. There was
+      # one, and it printed ${#FORGE_PR_TOKEN} - which proves a variable is set
+      # and nothing about whether the token works. polybjorn-en shipped that same
+      # check, saw it pass, and then lost two minutes of work to a 403 from the
+      # endpoint it claimed to have checked.
+      #
+      # The script below already makes the real request as its first act and
+      # reports the status it got, exiting 2 for "cannot answer" rather than 1 for
+      # "found something". A second check that proves less than the first is worse
+      # than none: it is the one a reader trusts.
 
       - name: Every merged PR is on main
         env:
