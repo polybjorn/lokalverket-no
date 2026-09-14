@@ -35,6 +35,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # First, before any work. The credential check used to live in the last
+      # step, behind the "did anything change" guard - so a run with nothing to
+      # update exited 0 having never looked at the secret, and a missing or
+      # invisible FORGE_PR_TOKEN would only surface on the first month something
+      # actually needed updating. A job that cannot finish its purpose should say
+      # so in its first ten seconds, not its last.
+      #
+      # It also makes a manual dispatch a real test of the secret rather than of
+      # npm, which is how this check earns its place on a run that has no work.
+      - name: FORGE_PR_TOKEN resolves
+        env:
+          PR_TOKEN: ${{ secrets.FORGE_PR_TOKEN }}
+        run: |
+          set -eu
+          if [ -z "${PR_TOKEN:-}" ]; then
+            echo "FORGE_PR_TOKEN is empty or not visible to this repo."
+            echo "It is an Actions secret at user scope or repo scope. The automatic"
+            echo "token cannot stand in: Forgejo answers POST /pulls with 404"
+            echo "'Can not read pulls' for it, which is the whole reason this exists."
+            exit 1
+          fi
+          # Length only. The value must never reach a log: this one is readable
+          # by anyone who can read the repo.
+          echo "FORGE_PR_TOKEN resolved, ${#PR_TOKEN} characters"
+
       - name: Registry answers
         run: npm ping
         timeout-minutes: 1
