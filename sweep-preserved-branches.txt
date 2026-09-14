@@ -1,0 +1,12 @@
+# Branches the sweep must not delete, one name per line.
+#
+# Preserving one is a decision about a particular moment, so this is data rather
+# than code - removing a line should not need a code review.
+#
+# These two are evidence for nixfleet #172: both were merged, both had a delete
+# job that reported success after verifying the branch was gone, and both are
+# still on the remote. The three earlier instances were swept before anyone
+# could examine them, which is the mistake being avoided here. nixfleet-a4 will
+# say when they are spent.
+herd/deps-credential-precheck
+herd/check-tests
