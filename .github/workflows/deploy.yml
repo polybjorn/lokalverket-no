@@ -17,6 +17,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Six hours IS the default here, unlike on the forge runner: these are
+    # GitHub's hosted runners. A hung build would sit at "running" for that long
+    # and the site would keep serving the previous deploy with nothing saying so.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       # withastro/action takes a node-version and NOTHING else: its inputs are
@@ -36,6 +40,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

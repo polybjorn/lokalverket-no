@@ -23,14 +23,36 @@ on:
 jobs:
   build:
     runs-on: docker
-    # A green run here takes well under a minute. With no timeout a wedged
-    # runner holds the job at "running" until Forgejo's six hour default, which
-    # reads as still working rather than broken - and the runner has one slot,
-    # so it keeps every other repo's CI queued behind it for those six hours.
+    # A green run here takes well under a minute - 11 seconds, measured. With no
+    # timeout a wedged job reads as still working rather than broken, and the
+    # runner takes one job at a time, so it keeps every other repo's CI queued
+    # behind it.
+    #
+    # NOT for six hours, which is what this comment said until it was checked.
+    # That figure is GitHub's hosted-runner default and does not apply here:
+    # nixfleet modules/forgejo-runner.nix sets runner.timeout = "30m" with
+    # capacity = 1, so the ceiling is thirty minutes and the queue is real. Ten
+    # minutes is well above anything this job has taken and still fails the same
+    # evening.
     timeout-minutes: 10
-    # npm's default retry chain takes 70 seconds to give up on a registry that
-    # does not answer, and 7m25s in the shape media-runner fails in, measured
-    # twice (nixfleet #136). Bounded, the same failure takes about 10 seconds.
+    # npm's default retry chain is slow to give up on a registry that does not
+    # answer. These numbers were inherited from polybjorn-en; measured on the
+    # hypervisor 2026-09-14 rather than taken on faith, and they hold:
+    #
+    #   failure shape          default    with the settings below
+    #   connection refused     70s        10s
+    #   DNS NXDOMAIN           70s        -
+    #   packets dropped        >200s      >100s
+    #
+    # The last row is the one no comment mentioned and it matters: against a
+    # black-holed registry these settings do NOT help. fetch-timeout governs the
+    # HTTP response, not the TCP connect, so the kernel's connect timeout
+    # dominates and npm sits there well past both figures. What bounds that case
+    # is timeout-minutes on the job, not this block.
+    #
+    # nixfleet #136 also measured 7m25s in the shape media-runner actually fails
+    # in, twice. That one is cited rather than reproduced - it is a property of
+    # that host on that day, and nothing here can recreate it.
     env:
       npm_config_fetch_retries: 1
       npm_config_fetch_timeout: 15000
