@@ -23,10 +23,17 @@ on:
 jobs:
   build:
     runs-on: docker
-    # A green run here takes well under a minute. With no timeout a wedged
-    # runner holds the job at "running" until Forgejo's six hour default, which
-    # reads as still working rather than broken - and the runner has one slot,
-    # so it keeps every other repo's CI queued behind it for those six hours.
+    # A green run here takes well under a minute - 11 seconds, measured. With no
+    # timeout a wedged job reads as still working rather than broken, and the
+    # runner takes one job at a time, so it keeps every other repo's CI queued
+    # behind it.
+    #
+    # NOT for six hours, which is what this comment said until it was checked.
+    # That figure is GitHub's hosted-runner default and does not apply here:
+    # nixfleet modules/forgejo-runner.nix sets runner.timeout = "30m" with
+    # capacity = 1, so the ceiling is thirty minutes and the queue is real. Ten
+    # minutes is well above anything this job has taken and still fails the same
+    # evening.
     timeout-minutes: 10
     # npm's default retry chain is slow to give up on a registry that does not
     # answer. These numbers were inherited from polybjorn-en; measured on the
