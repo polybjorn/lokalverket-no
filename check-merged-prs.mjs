@@ -20,6 +20,7 @@
 //          Forgejo answers 404 "Can not read pulls" for it on some paths)
 
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -98,10 +99,23 @@ if (git("rev-parse", "--is-shallow-repository") === "true") {
 //
 // Listed rather than suppressed: they still print, with where the work went. Add
 // an entry only once the content is demonstrably back on the branch.
-const ACKNOWLEDGED = new Map([
-  ["ad30ecd95ccdf39b8ca397a7c332cdb7d3755b0f", "#14, re-landed as #15 (e759711)"],
-  ["65b8d0866f0f9868a0abab8026f066972a55d43e", "#21, re-landed as #22 (41df704)"],
-]);
+// Kept as data in a file rather than as a literal here: acknowledging an orphan
+// is a record of something that happened, not a change of behaviour, and it
+// should not need a code review to add one. It also makes the acknowledge path
+// testable, which matters more than it sounds - it is the path that turns a
+// failure into a pass, so if it ever breaks open the watchdog dies silently.
+const ackPath = arg("acknowledged", "merge-audit-acknowledged.json");
+let ACKNOWLEDGED = new Map();
+if (fs.existsSync(ackPath)) {
+  try {
+    ACKNOWLEDGED = new Map(Object.entries(JSON.parse(fs.readFileSync(ackPath, "utf8"))));
+  } catch (e) {
+    console.error(`${ackPath} is not readable JSON: ${e.message}`);
+    console.error("Refusing rather than treating every orphan as unacknowledged,");
+    console.error("which would be a wall of noise, or as acknowledged, which would be silence.");
+    process.exit(2);
+  }
+}
 
 const since = Date.now() - days * 86400_000;
 

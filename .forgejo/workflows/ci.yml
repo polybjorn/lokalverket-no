@@ -127,6 +127,16 @@ jobs:
       # broke the deploy. This covers that one gap; the script says why in full.
       - name: Check withastro/action inputs
         run: ./check-workflow-inputs.sh
+      # The checks this gate runs are themselves unreviewed code, and two of
+      # check-merged-prs.mjs's paths fail OPEN - acknowledge-everything and
+      # orphan-detection-off both turn the job green, so a broken watchdog looks
+      # exactly like a healthy one. This pins all fourteen behaviours against git
+      # fixtures and a stub API, offline, so a later edit cannot flatten one
+      # quietly. Mutation-checked when written: removing the shallow guard,
+      # acknowledging everything, disabling orphan detection, and letting the page
+      # cap truncate each fail the test that should catch them.
+      - name: The checks still behave
+        run: ./check-merged-prs.test.mjs
 
   attribution:
     runs-on: docker
