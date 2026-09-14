@@ -29,6 +29,13 @@ Public repo, Norwegian-language site. Business context note:
   read it; `ci.yml` fails if the runner disagrees with it
 - `check-attribution.sh`, `check-workflow-inputs.sh`, `check-merged-prs.mjs` -
   the checks the gate runs. Each is runnable by hand, which is the point
+- `check-merged-prs.test.mjs` - pins the behaviour of the check above, which has
+  two paths that fail open, so a broken watchdog would read as a healthy one.
+  Offline: git fixtures in a temp dir and a stub API. Run it after any edit to
+  the check, and break a guard once to confirm the test still catches it
+- `merge-audit-acknowledged.json` - orphaned merges already re-landed, so the
+  daily audit does not fail on them for a week. A record of what happened, not
+  a change of behaviour, which is why it is data rather than code
 - [`DESIGN.md`](DESIGN.md) - how the site applies the brand (tokens, type,
   colour, decision status). The authoritative source is
   `~/Vault/Lokalverket/Brand/Brand guide/design-brief.md`; when they disagree,
