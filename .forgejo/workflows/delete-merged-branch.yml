@@ -6,11 +6,39 @@
 # Only branches under herd/ are touched, and only when the PR actually merged.
 # A closed-unmerged PR, anyone else's branch and main are all left alone.
 #
-# Ported from bjorn/media-tools (its issue #8, PR #9). media-tools runs on the
-# python label and uses python3 + urllib because that image guarantees them;
-# this repo's CI is runs-on: docker (node:22-bookworm), so the same request
-# goes through node's global fetch - the one dependency this image cannot be
-# missing is node.
+# Three things here look redundant and are not. All come from #16, and the
+# reasoning is the rovar-no session's (its #16 / PR #17); this is that shape
+# adapted rather than a second solution to the same problem.
+#
+# 1. THE ONE THAT ACTUALLY BIT. Forgejo answered a DELETE with 204 and did not
+#    delete the branch. That is read off the job log of rovar-no PR #15, which
+#    says `deleted herd/deps-update (204)` for a branch still on the remote
+#    afterwards. So a 2xx from this endpoint is not evidence of anything, and
+#    the GET below is unconditional rather than a fallback: the job asks what is
+#    true at the end instead of trusting what it was told. Success here means
+#    the branch is gone.
+#
+# 2. The guard is in the script rather than the job `if:`. This was the first
+#    theory for the failure above and turned out to be wrong, but it stands on
+#    its own: this forge's actions/tasks response carries a `status` field and
+#    no `conclusion` field, so from that listing a job skipped by its `if:` and
+#    a job that ran and deleted a branch read as the same word. The script now
+#    says out loud which case it took.
+#
+#    Job logs are readable with the agent token on this forge: GET
+#    /actions/jobs/{job_id}/logs returns 200. Reaching one is the fiddly part,
+#    and it is worth writing down because two sessions each wrote the endpoint
+#    off as unusable before getting it right. The job id comes from
+#    /actions/runs/{run_id}/jobs, keyed by the run's `id`. It is a different id
+#    space from both the `id` in the /actions/tasks listing and the number the
+#    UI shows - which the runs listing calls `index_in_repo` and the tasks
+#    listing calls `run_number`, so the number you have looks right in both
+#    places and works in neither. Feeding a task id to the logs endpoint does
+#    not 404; it can silently return a different job's log.
+#
+# 3. The DELETE status is still reported in the log line even though nothing
+#    branches on it, because "gone, and the API said 500" and "gone, and the
+#    API said 204" are different stories if this ever needs diagnosing again.
 name: Delete merged branch
 
 on:
@@ -19,54 +47,60 @@ on:
 
 jobs:
   delete:
-    # The whole guard is here rather than in the script: a job that does not
-    # run is clearer in the run list than a job that runs and decides to do
-    # nothing.
-    if: >-
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.head.ref, 'herd/')
     runs-on: docker
     timeout-minutes: 5
     steps:
-      # No checkout: this only talks to the API, and the repo contents are not
-      # needed to delete a ref.
+      # No checkout: the script is here and node's global fetch is in the image.
+      # media-tools runs the same job on the `python` label with urllib because
+      # that image guarantees the standard library; `docker` here is
+      # node:22-bookworm, so fetch is the equivalent that cannot be missing.
+      #
+      # A heredoc rather than `node -e`, so the script may contain apostrophes.
+      # Under `node -e '...'` a single quote ends the shell string, which has
+      # already cost one reworded comment in this file.
       - name: Delete the head branch
         env:
           TOKEN: ${{ github.token }}
           API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
+          MERGED: ${{ github.event.pull_request.merged }}
         run: |
-          node -e '
+          node - <<'JS'
           const branch = process.env.BRANCH;
-          const headers = { Authorization: `token ${process.env.TOKEN}` };
-          // Everything a branch name may contain is escaped except the slash,
-          // which stays a path separator - herd/topic is two segments to the
-          // API, and %2F is a different request. This is what urllib.parse.quote
-          // does by default, so this port and the media-tools one agree.
-          const path = encodeURIComponent(branch).replace(/%2F/g, "/");
+          // Each segment is escaped but the slashes are left alone: the API
+          // matches a branch name as a path, so herd%2Ffoo does not resolve.
+          const path = branch.split("/").map(encodeURIComponent).join("/");
           const url = `${process.env.API}/branches/${path}`;
-          const fail = (m) => { console.error(m); process.exit(1); };
+          const auth = { Authorization: `token ${process.env.TOKEN}` };
 
-          fetch(url, { method: "DELETE", headers }).then(async (r) => {
-            if (r.ok) return console.log(`deleted ${branch} (${r.status})`);
-            const body = (await r.text()).trim();
-            // Do not read the reason off the status. Forgejo 16.0.4 answers a
-            // DELETE for a branch that is not there with 500 and an empty
-            // message, not the 404 the API documents - measured against this
-            // forge on 2026-09-14 - so a branch someone already removed with
-            // the checkbox in the merge dialog would fail this job on every
-            // single merge. Ask the end state instead: if the branch is gone,
-            // the job has nothing to complain about. GET does return a clean
-            // 404, which is why it is the one being trusted here.
-            const check = await fetch(url, { headers });
+          const done = (msg) => { console.log(msg); process.exit(0); };
+          const fail = (msg) => { console.log(msg); process.exit(1); };
+
+          (async () => {
+            // These two were the job's `if:` until #16. Here they say so out
+            // loud, so the log distinguishes "not mine to touch" from "did it".
+            if (process.env.MERGED !== "true") done(`PR closed without merging, leaving ${branch}`);
+            if (!branch.startsWith("herd/")) done(`${branch} is not ours, leaving it`);
+
+            const del = await fetch(url, { method: "DELETE", headers: auth });
+
+            // Deliberately not branching on del.status. Forgejo 16.0.4 answers
+            // 500 with an empty message when the branch is already gone, not the
+            // documented 404 - measured against this repo on 2026-09-14 - so the
+            // first version's "404 means someone got there first" arm was dead
+            // code and the already-gone case fell into the failure arm. Asking
+            // what is true now is both simpler and correct whatever it answers.
+            const check = await fetch(url, { headers: auth });
+
             if (check.status === 404) {
-              return console.log(`${branch} is already gone (DELETE said ${r.status})`);
+              done(del.ok ? `deleted ${branch}` : `${branch} is gone (delete said ${del.status})`);
             }
-            // Anything else - a token that may not delete refs (403), a
-            // protected branch (403), an API that moved, a forge that is down
-            // so neither call answers - has to be loud. A cleanup job that
-            // fails quietly just goes back to piling branches up without
-            // saying so.
-            fail(`could not delete ${branch}: ${r.status} ${r.statusText} ${body}`);
-          }).catch(fail);
-          '
+            if (check.status === 200) {
+              // Reported success and the branch survived. rovar-no saw exactly
+              // this on its PR #15 and could not establish why. Whatever the
+              // cause, it has to be red rather than a green tick over nothing.
+              fail(`${branch} is still on the remote after DELETE answered ${del.status}\n${await del.text()}`);
+            }
+            fail(`cannot tell whether ${branch} is gone: DELETE ${del.status}, GET ${check.status}`);
+          })().catch((err) => fail(`could not delete ${branch}: ${err.message}`));
+          JS
