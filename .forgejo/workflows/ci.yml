@@ -28,9 +28,24 @@ jobs:
     # reads as still working rather than broken - and the runner has one slot,
     # so it keeps every other repo's CI queued behind it for those six hours.
     timeout-minutes: 10
-    # npm's default retry chain takes 70 seconds to give up on a registry that
-    # does not answer, and 7m25s in the shape media-runner fails in, measured
-    # twice (nixfleet #136). Bounded, the same failure takes about 10 seconds.
+    # npm's default retry chain is slow to give up on a registry that does not
+    # answer. These numbers were inherited from polybjorn-en; measured on the
+    # hypervisor 2026-09-14 rather than taken on faith, and they hold:
+    #
+    #   failure shape          default    with the settings below
+    #   connection refused     70s        10s
+    #   DNS NXDOMAIN           70s        -
+    #   packets dropped        >200s      >100s
+    #
+    # The last row is the one no comment mentioned and it matters: against a
+    # black-holed registry these settings do NOT help. fetch-timeout governs the
+    # HTTP response, not the TCP connect, so the kernel's connect timeout
+    # dominates and npm sits there well past both figures. What bounds that case
+    # is timeout-minutes on the job, not this block.
+    #
+    # nixfleet #136 also measured 7m25s in the shape media-runner actually fails
+    # in, twice. That one is cited rather than reproduced - it is a property of
+    # that host on that day, and nothing here can recreate it.
     env:
       npm_config_fetch_retries: 1
       npm_config_fetch_timeout: 15000
