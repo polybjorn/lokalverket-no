@@ -67,8 +67,14 @@ jobs:
         run: |
           node - <<'JS'
           const branch = process.env.BRANCH;
-          // Each segment is escaped but the slashes are left alone: the API
-          // matches a branch name as a path, so herd%2Ffoo does not resolve.
+          // Each segment is escaped and the slashes are left alone. NOT because
+          // an encoded slash fails - it does not. Measured on this repo with a
+          // throwaway branch: DELETE on herd%2Ftmp-encoding-probe answered 204
+          // and the branch was genuinely gone afterwards, same as a plain slash.
+          // The comment here used to claim herd%2Ffoo does not resolve, which was
+          // inherited as an established fact and was never true. The honest
+          // reason for this form is that it keeps the branch name readable in the
+          // URL and in the log line.
           const path = branch.split("/").map(encodeURIComponent).join("/");
           const url = `${process.env.API}/branches/${path}`;
           const auth = { Authorization: `token ${process.env.TOKEN}` };
