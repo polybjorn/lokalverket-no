@@ -43,6 +43,19 @@ const gitOk = (...args) => {
   catch { return false; }
 };
 
+// A shallow clone cannot answer this question and does not fail loudly when
+// asked: the merge commits fetch fine, but main's history is truncated, so
+// `--is-ancestor` says no for nearly all of them. Measured on a --depth 1 clone
+// of a repo with zero real orphans: it reported six of twelve as ORPHANED and
+// exited 1. A watchdog that cries wolf gets muted, and then the real one is
+// invisible too - so refuse rather than guess.
+if (git("rev-parse", "--is-shallow-repository") === "true") {
+  console.error("this is a shallow clone, so reachability cannot be decided here.");
+  console.error("Nearly every merge would be reported as orphaned.");
+  console.error("Use a full clone, or in CI set fetch-depth: 0 on actions/checkout.");
+  process.exit(2);
+}
+
 const since = Date.now() - days * 86400_000;
 
 const res = await fetch(`${api}/pulls?state=closed&limit=50&sort=recentupdate`, {
