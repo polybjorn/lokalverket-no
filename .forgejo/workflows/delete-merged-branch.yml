@@ -44,6 +44,11 @@ name: Delete merged branch
 on:
   pull_request:
     types: [closed]
+  schedule:
+    # 05:07 daily, off the hour and clear of the merge audit at 06:11 - the
+    # runner takes one job at a time for seven repos.
+    - cron: '7 5 * * *'
+  workflow_dispatch:
 
 jobs:
   delete:
@@ -110,3 +115,26 @@ jobs:
             fail(`cannot tell whether ${branch} is gone: DELETE ${del.status}, GET ${check.status}`);
           })().catch((err) => fail(`could not delete ${branch}: ${err.message}`));
           JS
+
+  # The job above verifies its own work and still misses cases: of eight branches
+  # it reported deleting on 2026-09-14, three were still on the remote afterwards,
+  # two from consecutive merges. It cannot do better, because the ref returns after
+  # the job has finished looking - no check made during a job catches something
+  # that happens after it.
+  #
+  # So this is a different shape rather than a better check. It converges: it does
+  # not care why a ref is there, only that it is there now and merged. Deletion
+  # goes through git push --delete rather than the API, which is the surface that
+  # has been reporting successful deletions of branches that survived.
+  sweep:
+    if: github.event_name != 'pull_request'
+    runs-on: docker
+    timeout-minutes: 10
+    steps:
+      # Full history: merged-ness is the whole question, and a shallow clone
+      # answers it wrong rather than not at all. The script refuses on one anyway.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./sweep-merged-branches.test.mjs
+      - run: ./sweep-merged-branches.mjs
