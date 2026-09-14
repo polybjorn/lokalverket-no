@@ -23,9 +23,34 @@ on:
 jobs:
   build:
     runs-on: docker
+    # A green run here takes well under a minute. With no timeout a wedged
+    # runner holds the job at "running" until Forgejo's six hour default, which
+    # reads as still working rather than broken - and the runner has one slot,
+    # so it keeps every other repo's CI queued behind it for those six hours.
+    timeout-minutes: 10
+    # npm's default retry chain takes 70 seconds to give up on a registry that
+    # does not answer, and 7m25s in the shape media-runner fails in, measured
+    # twice (nixfleet #136). Bounded, the same failure takes about 10 seconds.
+    env:
+      npm_config_fetch_retries: 1
+      npm_config_fetch_timeout: 15000
+      # Has to stay above npm's mintimeout of 10s or npm refuses the config
+      # outright - "minTimeout is greater than maxTimeout" - and the step then
+      # fails for a reason that has nothing to do with the network.
+      npm_config_fetch_retry_maxtimeout: 20000
     steps:
       - uses: actions/checkout@v4
+      # A build that cannot reach the registry and a build with a real error are
+      # the same red tick from the outside, minutes apart. This asks the one
+      # question that tells them apart, and answers it in about a second when
+      # the answer is yes.
+      - name: Registry answers
+        run: npm ping
+        timeout-minutes: 1
+      # The only other step that talks to the network, so the only other one
+      # that stalls rather than failing.
       - run: npm ci
+        timeout-minutes: 5
       - run: npm run build
 
   attribution:
