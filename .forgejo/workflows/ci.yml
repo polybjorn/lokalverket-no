@@ -40,6 +40,27 @@ jobs:
       npm_config_fetch_retry_maxtimeout: 20000
     steps:
       - uses: actions/checkout@v4
+      # The container image comes from the runner's docker label, configured in
+      # nixfleet, so nothing in this repo makes it agree with .nvmrc - and for a
+      # while it did not: the gate built on 22 while the Pages deploy built the
+      # live site on 24. This does not fix the version, it refuses to be quiet
+      # about it. Held back until now on purpose (#9): the runner was on 22, and
+      # a check that fails every push over a gap nobody can close from this repo
+      # is worse than the gap. nixfleet moved the image to node:24-bookworm, so
+      # it can land.
+      - name: Node matches .nvmrc
+        run: |
+          set -eu
+          want=$(tr -d 'v \r\n' < .nvmrc | cut -d. -f1)
+          have=$(node -p 'process.versions.node.split(".")[0]')
+          # Printed either way: a passing run is the only place the runner's
+          # actual version is written down, and knowing it is 24 is worth the
+          # line the next time this disagrees.
+          echo "runner node $have, .nvmrc asks for $want"
+          [ "$want" = "$have" ] || {
+            echo "move the runner image in nixfleet, or .nvmrc here - not one alone"
+            exit 1
+          }
       # A build that cannot reach the registry and a build with a real error are
       # the same red tick from the outside, minutes apart. This asks the one
       # question that tells them apart, and answers it in about a second when
