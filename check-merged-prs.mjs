@@ -90,6 +90,19 @@ if (git("rev-parse", "--is-shallow-repository") === "true") {
   process.exit(2);
 }
 
+// Orphans already found, understood and re-landed. They stay orphaned forever -
+// the merge commit is not coming back - so without this the daily run fails every
+// morning until they age out of the window, on two faults that were fixed the same
+// day. That is the muted-watchdog failure this tool warns about elsewhere in its
+// own comments, so it should not be the first thing it does.
+//
+// Listed rather than suppressed: they still print, with where the work went. Add
+// an entry only once the content is demonstrably back on the branch.
+const ACKNOWLEDGED = new Map([
+  ["ad30ecd95ccdf39b8ca397a7c332cdb7d3755b0f", "#14, re-landed as #15 (e759711)"],
+  ["65b8d0866f0f9868a0abab8026f066972a55d43e", "#21, re-landed as #22 (41df704)"],
+]);
+
 const since = Date.now() - days * 86400_000;
 
 // Paged, not a single ?limit=50. One page is correct until the 51st closed pull
@@ -140,6 +153,7 @@ if (!merged.length) {
 }
 
 const orphans = [];
+const acknowledged = [];
 const missing = [];
 for (const p of merged) {
   const sha = p.merge_commit_sha;
@@ -151,11 +165,17 @@ for (const p of merged) {
       continue;
     }
   }
-  if (!gitOk("merge-base", "--is-ancestor", sha, ref)) orphans.push(p);
+  if (!gitOk("merge-base", "--is-ancestor", sha, ref)) {
+    (ACKNOWLEDGED.has(sha) ? acknowledged : orphans).push(p);
+  }
 }
 
 console.log(`checked ${merged.length} merged pull request(s) from the last ${days} days against ${ref}`);
 
+for (const p of acknowledged) {
+  console.log(`  known        #${p.number}  ${p.merge_commit_sha.slice(0, 7)}  ${p.title}`);
+  console.log(`      orphaned and already dealt with: ${ACKNOWLEDGED.get(p.merge_commit_sha)}`);
+}
 for (const p of missing) {
   console.log(`  UNFETCHABLE  #${p.number}  ${p.merge_commit_sha.slice(0, 7)}  ${p.title}`);
   console.log("      the forge reports this merge commit but will not serve the object");
@@ -169,7 +189,7 @@ for (const p of orphans) {
 }
 
 if (!orphans.length && !missing.length) {
-  console.log("  all reachable");
+  console.log(acknowledged.length ? "  nothing new" : "  all reachable");
   process.exit(0);
 }
 
