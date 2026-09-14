@@ -53,6 +53,38 @@ jobs:
         timeout-minutes: 5
       - run: npm run build
 
+  # The gate builds the site but never reads .github/workflows, so a change that
+  # breaks only the Pages deploy used to land green - #10 did exactly that and
+  # the deploy for the merge failed with both jobs here passing.
+  lint:
+    runs-on: docker
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # Pinned by version AND by checksum: this downloads a binary over the
+      # network and then runs it, so "whatever is behind that URL today" is not
+      # good enough. Moving the version means updating both lines.
+      - name: Install actionlint
+        env:
+          VERSION: 1.7.12
+          SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -eu
+          url="https://github.com/rhysd/actionlint/releases/download/v$VERSION/actionlint_${VERSION}_linux_amd64.tar.gz"
+          curl -sSfL --retry 2 --max-time 60 -o actionlint.tar.gz "$url"
+          echo "$SHA256  actionlint.tar.gz" | sha256sum -c -
+          tar xzf actionlint.tar.gz actionlint
+      # Both trees, not just one: .github/workflows is what publishes the site and
+      # .forgejo/workflows is this gate. The self-hosted labels are declared in
+      # .github/actionlint.yaml or every runs-on here reads as an unknown label.
+      - name: Lint the workflow files
+        run: ./actionlint -no-color .github/workflows/*.yml .forgejo/workflows/*.yml
+      # actionlint checks `with:` keys only for actions in its popular-actions
+      # database, which withastro/action is not in - it returns 0 on the file that
+      # broke the deploy. This covers that one gap; the script says why in full.
+      - name: Check withastro/action inputs
+        run: ./check-workflow-inputs.sh
+
   attribution:
     runs-on: docker
     timeout-minutes: 5
