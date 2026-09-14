@@ -19,14 +19,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # withastro/action takes a node-version and NOTHING else: its inputs are
+      # node-version, package-manager and path. It has no node-version-file, and
+      # an unknown input is silently ignored rather than rejected, so passing one
+      # does not fail the step - it drops the pin and the action falls back to its
+      # default of Node 20, which Astro 7 then refuses (>=22.12.0). That is exactly
+      # how 60e02c2 broke this deploy. Read the file and hand over its contents.
+      - id: node
+        run: echo "version=$(tr -d ' \r\n' < .nvmrc)" >> "$GITHUB_OUTPUT"
       - uses: withastro/action@v3
         with:
-          # The action defaults to Node 20 and Astro 7 requires >=22.12.0, so
-          # this has to be set. It reads .nvmrc rather than repeating the number,
-          # so the version the live site is built with is stated in one place and
-          # can be checked against the forge runner once that runner is on the
-          # same version. polybjorn-en pins it the same way.
-          node-version-file: .nvmrc
+          # .nvmrc stays the one place the version is written, so moving it is a
+          # one-line change that the forge gate can check against its runner.
+          node-version: ${{ steps.node.outputs.version }}
 
   deploy:
     needs: build
