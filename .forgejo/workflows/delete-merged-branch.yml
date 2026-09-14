@@ -25,11 +25,16 @@
 #    a job that ran and deleted a branch read as the same word. The script now
 #    says out loud which case it took.
 #
-#    Job logs ARE readable here, unlike on rovar-no where this check was first
-#    written: GET /actions/jobs/{job_id}/logs returns 200 for the agent token.
-#    The job id comes from /actions/runs/{run_id}/jobs and is a different id
-#    space from the `id` in the /actions/tasks listing - feeding a task id to
-#    the logs endpoint can silently return a different job's log.
+#    Job logs are readable with the agent token on this forge: GET
+#    /actions/jobs/{job_id}/logs returns 200. Reaching one is the fiddly part,
+#    and it is worth writing down because two sessions each wrote the endpoint
+#    off as unusable before getting it right. The job id comes from
+#    /actions/runs/{run_id}/jobs, keyed by the run's `id`. It is a different id
+#    space from both the `id` in the /actions/tasks listing and the number the
+#    UI shows - which the runs listing calls `index_in_repo` and the tasks
+#    listing calls `run_number`, so the number you have looks right in both
+#    places and works in neither. Feeding a task id to the logs endpoint does
+#    not 404; it can silently return a different job's log.
 #
 # 3. The DELETE status is still reported in the log line even though nothing
 #    branches on it, because "gone, and the API said 500" and "gone, and the
