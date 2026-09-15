@@ -36,9 +36,21 @@ const ref = arg("ref", "origin/main");
 const preservedPath = arg("preserved", "sweep-preserved-branches.txt");
 // How hard to push against a ref the forge keeps restoring. Four attempts five
 // seconds apart, so a branch has to survive roughly twenty seconds of being
-// deleted before this goes red; both measured restores landed within two
-// seconds of their delete. Exposed as flags so the test can run the same code
-// with the waiting taken out.
+// deleted before this goes red.
+//
+// THE WAIT IS NOT SIZED TO OUTLAST THE RESTORE, and cannot be. The two measured
+// offsets are +1.775 s and -0.069 s against the deleting client's own
+// confirmation: one restore landed before the push had finished printing
+// `- [deleted]`. So there is no value here that makes a single pass safe -
+// raising it buys nothing and lowering it costs nothing. What does the work is
+// the loop below, and the reasoning is with it rather than here.
+//
+// This comment previously said both restores landed "within two seconds of
+// their delete", which is arithmetically defensible and reads as an argument
+// that five seconds is comfortably enough. It sits next to the knob, so that is
+// the reading that would get acted on.
+//
+// Exposed as flags so the test can run the same code with the waiting taken out.
 const attempts = Math.max(1, Number(arg("attempts", "4")) || 1);
 const waitSeconds = Math.max(0, Number(arg("wait", "5")) || 0);
 
@@ -130,8 +142,9 @@ if (dryRun) {
 // this host. Nothing below depends on the answer, which is the point of the shape:
 // it converges on a ref that is there and merged, whoever put it there.
 //
-// The restore does not land at a fixed offset - one specimen 1.775 s after the
-// delete, the other 0.069 s BEFORE the push printed `- [deleted]` - so no
+// The restore does not land at a fixed offset - the two specimens are +1.775 s
+// and -0.069 s against the deleting client's own confirmation, the second
+// landing before the push had finished printing `- [deleted]` - so no
 // arrangement of checks is a guarantee and no single wait is long enough to be
 // one. What works is converging: ask again, delete again, and reserve red for a
 // ref that outlasts every attempt. The alternative was measured too: rovar-no's
