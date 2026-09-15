@@ -111,14 +111,24 @@ if (dryRun) {
   process.exit(0);
 }
 
-// One pass is not enough, and the reason is not a flaky network. This forge
-// deletes the ref correctly through receive-pack, records the deletion in its
-// branch table, and then recreates the ref at its old sha without undoing the
-// record. Read on the forge host on 2026-09-15 against bjorn/rovar-no, with the
-// restoring write attributed to the forge itself (Gitea <gitea@fake.local>) and
-// no git-receive-pack in the HTTP log for either window. Two specimens, both
-// with 0000000 as the reflog's old sha, so the delete genuinely applied each
-// time. Cause tracked in nixfleet #194; not fixable from this repo.
+// One pass is not enough, and the reason is not a flaky network. A deleted ref
+// comes back, at its old sha, after a delete that genuinely applied - both
+// specimens measured on bjorn/rovar-no on 2026-09-15 had 0000000 as the reflog's
+// old sha, so the deletion was real each time.
+//
+// WHO puts it back is deliberately not stated here. An earlier version of this
+// comment said the restoring write was the forge's own internal one, reading a
+// `update by push` reflog entry as evidence of that. nixfleet #202 established
+// the opposite: `update by push` is what a PUSHING client writes for its own
+// remote-tracking ref, and receive-pack on the receiving side writes plain
+// `push`. Reproduced locally on git 2.54.0 rather than taken on trust - push to
+// a bare repo, then read both reflogs, and the two messages differ exactly that
+// way. So the entry does not say what it was read as saying, and nixfleet #172's
+// "the ref was never deleted" is superseded.
+//
+// The cause is nixfleet #194's to settle and is not measurable from this repo or
+// this host. Nothing below depends on the answer, which is the point of the shape:
+// it converges on a ref that is there and merged, whoever put it there.
 //
 // The restore does not land at a fixed offset - one specimen 1.775 s after the
 // delete, the other 0.069 s BEFORE the push printed `- [deleted]` - so no

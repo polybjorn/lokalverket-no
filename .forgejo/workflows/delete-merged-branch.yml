@@ -17,10 +17,14 @@
 # by that job, both reported gone, both still reachable through git ls-remote and
 # GET /git/refs/heads while GET /branches omitted them.
 #
-# What is actually happening, read on the forge host on 2026-09-15: the forge
-# deletes the ref correctly through receive-pack, records the deletion in its
-# branch table, and then recreates the ref at its old sha without undoing the
-# record. Cause tracked in nixfleet #194, not fixable from this repo.
+# What is established: the ref is deleted for real and then comes back at its old
+# sha. What is NOT established is by what. This comment used to name the forge's
+# own internal write as the culprit; nixfleet #202 showed that reading rested on a
+# `update by push` reflog entry, which is a PUSHING client's message for its own
+# remote-tracking ref - receive-pack writes plain `push` - so it does not support
+# the claim. Cause is nixfleet #194's, and not measurable from this repo.
+#
+# The job below does not need the answer. That is deliberate.
 #
 # The replacement does not check harder. It converges: delete through git, ask
 # git again, delete again, bounded, with red reserved for a ref that outlasts

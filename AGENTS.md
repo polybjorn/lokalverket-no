@@ -90,6 +90,17 @@ Vault path, where `../layouts` doesn't exist.
 
 ## Deploy
 
+- **The forge is not where the site is served from.** `origin` in the herd clone
+  is Forgejo; the deploy runs on GitHub. A **push mirror** on the forge replicates
+  `main` to `github.com/polybjorn/lokalverket-no`, so merging on the forge is the
+  whole deploy and no manual push is needed. Confirmed 2026-09-15 by reading the
+  forge repo settings: direction Push, no SSH key (so it goes over HTTPS with a
+  stored credential), and it had fired minutes after that day's merge.
+
+  Worth knowing rather than trusting: that mirror is a single point of failure and
+  is **invisible from any non-admin session** - `GET /repos/.../push_mirrors`
+  needs admin, and this host cannot reach GitHub to check the far end. If it ever
+  stops, a merge will look completely successful and the site will not change.
 - GitHub Pages via `.github/workflows/deploy.yml` (withastro/action ->
   actions/deploy-pages). Push to `main` builds and deploys. Pages source = GitHub Actions.
 - **The forge gate and the deploy are different builds on different runners**,
