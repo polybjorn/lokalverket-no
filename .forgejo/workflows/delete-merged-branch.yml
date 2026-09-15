@@ -1,44 +1,34 @@
-# Deletes the head branch when a pull request merges. The forge-native way to
-# do this is the repo setting default_delete_branch_after_merge, which is
-# admin-only and was never set; this is the same job as a file in the repo,
-# where it can be read and changed without admin rights.
+# Deletes herd/ branches that are already merged into main. The forge-native way
+# to do this is the repo setting default_delete_branch_after_merge, which is
+# admin-only and was never set; this is the same job as a file in the repo, where
+# it can be read and changed without admin rights.
 #
-# Only branches under herd/ are touched, and only when the PR actually merged.
-# A closed-unmerged PR, anyone else's branch and main are all left alone.
+# One job, three triggers. There used to be a second job that ran only on a merge
+# and did the deleting through the forge API, with the sweep behind it as a
+# backstop. That job is removed, and the reason is not tidiness.
 #
-# Three things here look redundant and are not. All come from #16, and the
-# reasoning is the rovar-no session's (its #16 / PR #17); this is that shape
-# adapted rather than a second solution to the same problem.
+# IT USED THE API AS BOTH EXECUTOR AND JUDGE. It sent DELETE /branches/{name} and
+# then asked GET /branches/{name} whether that had worked, treating 404 as gone.
+# On rovar-no PR #23 the DELETE returned 2xx and the verification GET returned
+# 404 - both saying the branch was gone - while the ref was still on the remote.
+# Checking the end state through the API is not a check when the API is the thing
+# that is wrong. The two specimens nixfleet #172 was measured on were this repo's
+# own branches, herd/check-tests and herd/deps-credential-precheck: both deleted
+# by that job, both reported gone, both still reachable through git ls-remote and
+# GET /git/refs/heads while GET /branches omitted them.
 #
-# 1. THE ONE THAT ACTUALLY BIT. Forgejo answered a DELETE with 204 and did not
-#    delete the branch. That is read off the job log of rovar-no PR #15, which
-#    says `deleted herd/deps-update (204)` for a branch still on the remote
-#    afterwards. So a 2xx from this endpoint is not evidence of anything, and
-#    the GET below is unconditional rather than a fallback: the job asks what is
-#    true at the end instead of trusting what it was told. Success here means
-#    the branch is gone.
+# What is actually happening, read on the forge host on 2026-09-15: the forge
+# deletes the ref correctly through receive-pack, records the deletion in its
+# branch table, and then recreates the ref at its old sha without undoing the
+# record. Cause tracked in nixfleet #194, not fixable from this repo.
 #
-# 2. The guard is in the script rather than the job `if:`. This was the first
-#    theory for the failure above and turned out to be wrong, but it stands on
-#    its own: this forge's actions/tasks response carries a `status` field and
-#    no `conclusion` field, so from that listing a job skipped by its `if:` and
-#    a job that ran and deleted a branch read as the same word. The script now
-#    says out loud which case it took.
-#
-#    Job logs are readable with the agent token on this forge: GET
-#    /actions/jobs/{job_id}/logs returns 200. Reaching one is the fiddly part,
-#    and it is worth writing down because two sessions each wrote the endpoint
-#    off as unusable before getting it right. The job id comes from
-#    /actions/runs/{run_id}/jobs, keyed by the run's `id`. It is a different id
-#    space from both the `id` in the /actions/tasks listing and the number the
-#    UI shows - which the runs listing calls `index_in_repo` and the tasks
-#    listing calls `run_number`, so the number you have looks right in both
-#    places and works in neither. Feeding a task id to the logs endpoint does
-#    not 404; it can silently return a different job's log.
-#
-# 3. The DELETE status is still reported in the log line even though nothing
-#    branches on it, because "gone, and the API said 500" and "gone, and the
-#    API said 204" are different stories if this ever needs diagnosing again.
+# The replacement does not check harder. It converges: delete through git, ask
+# git again, delete again, bounded, with red reserved for a ref that outlasts
+# every attempt. That lives in sweep-merged-branches.mjs, which already had the
+# git-only enumeration and a test; running it on the merge as well as on the
+# schedule is one implementation instead of two, and it is the one that is
+# pinned. A merge that leaves the branch behind is now fixed by the next
+# scheduled run rather than needing anybody to look.
 name: Delete merged branch
 
 on:
@@ -51,88 +41,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  delete:
-    runs-on: docker
-    timeout-minutes: 5
-    steps:
-      # No checkout: the script is here and node's global fetch is in the image.
-      # media-tools runs the same job on the `python` label with urllib because
-      # that image guarantees the standard library; `docker` here is
-      # node:22-bookworm, so fetch is the equivalent that cannot be missing.
-      #
-      # A heredoc rather than `node -e`, so the script may contain apostrophes.
-      # Under `node -e '...'` a single quote ends the shell string, which has
-      # already cost one reworded comment in this file.
-      - name: Delete the head branch
-        env:
-          TOKEN: ${{ github.token }}
-          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-          MERGED: ${{ github.event.pull_request.merged }}
-        run: |
-          node - <<'JS'
-          const branch = process.env.BRANCH;
-          // Each segment is escaped and the slashes are left alone. NOT because
-          // an encoded slash fails - it does not. Measured on this repo with a
-          // throwaway branch: DELETE on herd%2Ftmp-encoding-probe answered 204
-          // and the branch was genuinely gone afterwards, same as a plain slash.
-          // The comment here used to claim herd%2Ffoo does not resolve, which was
-          // inherited as an established fact and was never true. The honest
-          // reason for this form is that it keeps the branch name readable in the
-          // URL and in the log line.
-          const path = branch.split("/").map(encodeURIComponent).join("/");
-          const url = `${process.env.API}/branches/${path}`;
-          const auth = { Authorization: `token ${process.env.TOKEN}` };
-
-          const done = (msg) => { console.log(msg); process.exit(0); };
-          const fail = (msg) => { console.log(msg); process.exit(1); };
-
-          (async () => {
-            // These two were the job's `if:` until #16. Here they say so out
-            // loud, so the log distinguishes "not mine to touch" from "did it".
-            if (process.env.MERGED !== "true") done(`PR closed without merging, leaving ${branch}`);
-            if (!branch.startsWith("herd/")) done(`${branch} is not ours, leaving it`);
-
-            const del = await fetch(url, { method: "DELETE", headers: auth });
-
-            // Deliberately not branching on del.status. Forgejo 16.0.4 answers
-            // 500 with an empty message when the branch is already gone, not the
-            // documented 404 - measured against this repo on 2026-09-14 - so the
-            // first version's "404 means someone got there first" arm was dead
-            // code and the already-gone case fell into the failure arm. Asking
-            // what is true now is both simpler and correct whatever it answers.
-            const check = await fetch(url, { headers: auth });
-
-            if (check.status === 404) {
-              done(del.ok ? `deleted ${branch}` : `${branch} is gone (delete said ${del.status})`);
-            }
-            if (check.status === 200) {
-              // Reported success and the branch survived. rovar-no saw exactly
-              // this on its PR #15 and could not establish why. Whatever the
-              // cause, it has to be red rather than a green tick over nothing.
-              fail(`${branch} is still on the remote after DELETE answered ${del.status}\n${await del.text()}`);
-            }
-            fail(`cannot tell whether ${branch} is gone: DELETE ${del.status}, GET ${check.status}`);
-          })().catch((err) => fail(`could not delete ${branch}: ${err.message}`));
-          JS
-
-  # The job above verifies its own work and still misses cases: of eight branches
-  # it reported deleting on 2026-09-14, three were still on the remote afterwards,
-  # two from consecutive merges. It cannot do better, because the ref returns after
-  # the job has finished looking - no check made during a job catches something
-  # that happens after it.
-  #
-  # So this is a different shape rather than a better check. It converges: it does
-  # not care why a ref is there, only that it is there now and merged. Deletion
-  # goes through git push --delete rather than the API, which is the surface that
-  # has been reporting successful deletions of branches that survived.
   sweep:
-    if: github.event_name != 'pull_request'
     runs-on: docker
+    # Four attempts five seconds apart is about twenty seconds of deleting in the
+    # worst case, on top of the clone. Ten minutes is far more than that on
+    # purpose: the cap is there to stop a hung job holding the single runner, not
+    # to bound the retry, which bounds itself.
     timeout-minutes: 10
     steps:
       # Full history: merged-ness is the whole question, and a shallow clone
       # answers it wrong rather than not at all. The script refuses on one anyway.
+      #
+      # A checkout is also what makes the delete possible at all - git push needs
+      # a repository to run from, which is why the old job could reach for the API
+      # without one. persist-credentials (the default) puts the token in the
+      # extraheader, and that is what authenticates the delete push.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
