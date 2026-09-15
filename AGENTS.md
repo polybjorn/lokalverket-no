@@ -22,9 +22,9 @@ Public repo, Norwegian-language site. Business context note:
   and `public/favicon.svg` is a placeholder "L" tile. DESIGN.md tracks it; the
   mark gets drawn in Affinity, not hand-edited here
 - `.forgejo/workflows/` - the gate on the self-hosted runner. Not the deploy;
-  see below. `ci.yml` builds and lints, `delete-merged-branch.yml` removes a
-  merged head branch, `deps-update.yml` opens the monthly dependency PR,
-  `merge-audit.yml` checks merges actually landed
+  see below. `ci.yml` builds and lints, `delete-merged-branch.yml` sweeps merged
+  `herd/` branches on merge and daily, `deps-update.yml` opens the monthly
+  dependency PR, `merge-audit.yml` checks merges actually landed
 - `.nvmrc` - the node version, in one place. Both the gate and the Pages deploy
   read it; `ci.yml` fails if the runner disagrees with it
 - `check-attribution.sh`, `check-workflow-inputs.sh`, `check-merged-prs.mjs` -
@@ -33,6 +33,14 @@ Public repo, Norwegian-language site. Business context note:
   two paths that fail open, so a broken watchdog would read as a healthy one.
   Offline: git fixtures in a temp dir and a stub API. Run it after any edit to
   the check, and break a guard once to confirm the test still catches it
+- `sweep-merged-branches.mjs` + its `.test.mjs` and `sweep-preserved-branches.txt`
+  - the only thing here that deletes a branch. Everything that decides anything
+  goes through git; the forge API is not consulted, because it has answered both
+  the delete and the verification with success over a ref that was still there
+  (nixfleet #172, #194). It retries within a run rather than reporting on the
+  first failure, since the forge restores the ref within about two seconds of a
+  successful delete. The preserved file is data, not code, so taking a branch off
+  the list does not need a code review
 - `merge-audit-acknowledged.json` - orphaned merges already re-landed, so the
   daily audit does not fail on them for a week. A record of what happened, not
   a change of behaviour, which is why it is data rather than code
@@ -51,7 +59,8 @@ Public repo, Norwegian-language site. Business context note:
 **`main` is where the site lives.** Every push to it deploys to GitHub Pages.
 Preview locally with `npm run dev` rather than pushing WIP; if a change ever
 needs to live off-machine before it's ready, cut a short-lived branch and delete
-it on merge - `delete-merged-branch.yml` does that automatically for `herd/*`.
+it on merge - `delete-merged-branch.yml` does that automatically for `herd/*`,
+on the merge and again every morning until the ref actually stays gone.
 
 Two kinds of branch are expected to exist and are not WIP:
 

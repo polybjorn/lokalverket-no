@@ -137,6 +137,15 @@ jobs:
       # cap truncate each fail the test that should catch them.
       - name: The checks still behave
         run: ./check-merged-prs.test.mjs
+      # The sweep is the one script here whose mistakes are destructive rather
+      # than noisy, and until now its test ran only inside the delete workflow -
+      # i.e. after a merge, on the thing that had already been merged. Running it
+      # on the PR as well means a regression in it is caught before it can delete
+      # anything. Mutation-checked when the retry was added: forcing one attempt,
+      # dropping the sha comparison that spares a re-pushed branch, and reporting
+      # green on exhaustion each fail the test that should catch them.
+      - name: The sweep still behaves
+        run: ./sweep-merged-branches.test.mjs
 
   attribution:
     runs-on: docker
