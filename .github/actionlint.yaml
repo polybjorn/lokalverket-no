@@ -14,3 +14,15 @@ self-hosted-runner:
     - docker
     - python
     - nix
+
+# The `attribution` job takes bjorn/ci-actions/attribution@v1 by full URL,
+# including the port, because a bare `bjorn/ci-actions/...` resolves against
+# DEFAULT_ACTIONS_URL - data.forgejo.org - rather than this forge. actionlint
+# only knows GitHub's `{owner}/{repo}@{ref}` shape and calls the URL form
+# invalid, so the rule is switched off for this tree and this tree only:
+# .github/workflows really does run on GitHub, where the URL form would be a
+# genuine error. Measured with actionlint 1.7.12, the version ci.yml pins.
+paths:
+  .forgejo/workflows/**:
+    ignore:
+      - 'specifying action .+ in invalid format because owner and repo and ref should not be empty'
