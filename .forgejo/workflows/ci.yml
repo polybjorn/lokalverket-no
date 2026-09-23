@@ -61,7 +61,7 @@ jobs:
       # fails for a reason that has nothing to do with the network.
       npm_config_fetch_retry_maxtimeout: 20000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The container image comes from the runner's docker label, configured in
       # nixfleet, so nothing in this repo makes it agree with .nvmrc - and for a
       # while it did not: the gate built on 22 while the Pages deploy built the
@@ -103,7 +103,7 @@ jobs:
     runs-on: docker
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Pinned by version AND by checksum: this downloads a binary over the
       # network and then runs it, so "whatever is behind that URL today" is not
       # good enough. Moving the version means updating both lines.
@@ -151,7 +151,7 @@ jobs:
     runs-on: docker
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check commit messages
