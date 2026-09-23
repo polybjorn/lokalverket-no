@@ -22,7 +22,7 @@ jobs:
     # and the site would keep serving the previous deploy with nothing saying so.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # withastro/action takes a node-version and NOTHING else: its inputs are
       # node-version, package-manager and path. It has no node-version-file, and
       # an unknown input is silently ignored rather than rejected, so passing one
@@ -31,7 +31,7 @@ jobs:
       # how 60e02c2 broke this deploy. Read the file and hand over its contents.
       - id: node
         run: echo "version=$(tr -d ' \r\n' < .nvmrc)" >> "$GITHUB_OUTPUT"
-      - uses: withastro/action@v3
+      - uses: withastro/action@v6
         with:
           # .nvmrc stays the one place the version is written, so moving it is a
           # one-line change that the forge gate can check against its runner.
@@ -46,4 +46,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

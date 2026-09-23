@@ -33,7 +33,7 @@ jobs:
       npm_config_fetch_timeout: 15000
       npm_config_fetch_retry_maxtimeout: 20000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # First, before any work. The credential check used to live in the last
       # step, behind the "did anything change" guard - so a run with nothing to

@@ -60,7 +60,7 @@ jobs:
       # a repository to run from, which is why the old job could reach for the API
       # without one. persist-credentials (the default) puts the token in the
       # extraheader, and that is what authenticates the delete push.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - run: ./sweep-merged-branches.test.mjs

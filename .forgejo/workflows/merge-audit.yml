@@ -31,7 +31,7 @@ jobs:
     steps:
       # Full history: reachability is the whole question, and a shallow clone
       # answers it wrong rather than not at all.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
