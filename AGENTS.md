@@ -27,8 +27,10 @@ Public repo, Norwegian-language site. Business context note:
   dependency PR, `merge-audit.yml` checks merges actually landed
 - `.nvmrc` - the node version, in one place. Both the gate and the Pages deploy
   read it; `ci.yml` fails if the runner disagrees with it
-- `check-attribution.sh`, `check-workflow-inputs.sh`, `check-merged-prs.mjs` -
-  the checks the gate runs. Each is runnable by hand, which is the point
+- `check-workflow-inputs.sh`, `check-merged-prs.mjs` - the checks the gate runs
+  from this tree. Each is runnable by hand, which is the point. The attribution
+  check is not among them any more: it is `bjorn/ci-actions/attribution@v1`,
+  one copy for the seven repos, and it carries its own selftest
 - `check-merged-prs.test.mjs` - pins the behaviour of the check above, which has
   two paths that fail open, so a broken watchdog would read as a healthy one.
   Offline: git fixtures in a temp dir and a stub API. Run it after any edit to
