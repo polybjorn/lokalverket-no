@@ -60,6 +60,12 @@ jobs:
       # a repository to run from, which is why the old job could reach for the API
       # without one. persist-credentials (the default) puts the token in the
       # extraheader, and that is what authenticates the delete push.
+      #
+      # THAT IS WHY THIS ONE STAYS on actions/checkout while the rest of the
+      # repo moved to bjorn/ci-actions/checkout@v1: that action sets origin to
+      # the clean URL on purpose and persists no credential, and this repo is
+      # private, so the sweep's ls-remote and push --delete would both be
+      # anonymous. bjorn/nixfleet#1000.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
