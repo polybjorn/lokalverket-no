@@ -79,7 +79,7 @@ if (!gitOk("fetch", "--quiet", remote, "main")) {
 }
 if (git("rev-parse", "--is-shallow-repository") === "true") {
   console.error("shallow clone: --merged would be answered from truncated history.");
-  console.error("Use a full clone, or fetch-depth: 0 on actions/checkout.");
+  console.error("Use a full clone, or depth: 0 on the checkout action.");
   process.exit(2);
 }
 

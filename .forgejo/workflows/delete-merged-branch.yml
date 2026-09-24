@@ -58,16 +58,17 @@ jobs:
       #
       # A checkout is also what makes the delete possible at all - git push needs
       # a repository to run from, which is why the old job could reach for the API
-      # without one. persist-credentials (the default) puts the token in the
-      # extraheader, and that is what authenticates the delete push.
-      #
-      # THAT IS WHY THIS ONE STAYS on actions/checkout while the rest of the
-      # repo moved to bjorn/ci-actions/checkout@v1: that action sets origin to
-      # the clean URL on purpose and persists no credential, and this repo is
-      # private, so the sweep's ls-remote and push --delete would both be
-      # anonymous. bjorn/nixfleet#1000.
-      - uses: actions/checkout@v7
+      # without one. credential-helper is what authenticates that push: this repo
+      # is private, so without one the sweep's ls-remote and push --delete are
+      # both anonymous, which is what kept this call site on actions/checkout
+      # when the rest of the repo moved (bjorn/nixfleet#1000). The token goes in
+      # a 0600 file in the runner's scratch with only its path in .git/config,
+      # instead of persist-credentials' extraheader inside the workspace, which
+      # every later step in the job can read. bjorn/ci-actions#18.
+      - uses: https://git-ci.pebblecove.xyz:8447/bjorn/ci-actions/checkout@v1
         with:
-          fetch-depth: 0
+          token: ${{ github.token }}
+          depth: 0
+          credential-helper: true
       - run: ./sweep-merged-branches.test.mjs
       - run: ./sweep-merged-branches.mjs
