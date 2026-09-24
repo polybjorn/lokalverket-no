@@ -87,7 +87,7 @@ if (remoteRef && remotes.has(remoteRef[1])) {
 if (git("rev-parse", "--is-shallow-repository") === "true") {
   console.error("this is a shallow clone, so reachability cannot be decided here.");
   console.error("Nearly every merge would be reported as orphaned.");
-  console.error("Use a full clone, or in CI set fetch-depth: 0 on actions/checkout.");
+  console.error("Use a full clone, or in CI pass depth: 0 to the checkout action.");
   process.exit(2);
 }
 
