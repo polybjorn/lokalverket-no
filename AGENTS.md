@@ -22,9 +22,11 @@ Public repo, Norwegian-language site. Business context note:
   and `public/favicon.svg` is a placeholder "L" tile. DESIGN.md tracks it; the
   mark gets drawn in Affinity, not hand-edited here
 - `.forgejo/workflows/` - the gate on the self-hosted runner. Not the deploy;
-  see below. `ci.yml` builds and lints, `delete-merged-branch.yml` sweeps merged
-  `herd/` branches on merge and daily, `deps-update.yml` opens the monthly
-  dependency PR, `merge-audit.yml` checks merges actually landed
+  see below. `ci.yml` builds, lints and scans the lockfile for known advisories
+  against the runner host's offline OSV cache (`bjorn/ci-actions/osv-scan`),
+  `delete-merged-branch.yml` sweeps merged `herd/` branches on merge and daily,
+  `deps-update.yml` opens the monthly dependency PR, `merge-audit.yml` checks
+  merges actually landed
 - `.nvmrc` - the node version, in one place. Both the gate and the Pages deploy
   read it; `ci.yml` fails if the runner disagrees with it
 - `check-workflow-inputs.sh`, `check-merged-prs.mjs` - the checks the gate runs
