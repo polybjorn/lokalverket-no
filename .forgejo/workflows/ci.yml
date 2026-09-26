@@ -86,6 +86,29 @@ jobs:
             echo "move the runner image in nixfleet, or .nvmrc here - not one alone"
             exit 1
           }
+      # A dependency CVE lands as a red tick here rather than in nobody's inbox.
+      # Offline: the scanner and the OSV databases are cached on the runner host
+      # and bind-mounted read-only at /osv (nixfleet modules/forgejo-runner.nix),
+      # so this repo's package list never reaches osv.dev. It reads
+      # package-lock.json rather than node_modules, so it goes ahead of the two
+      # steps below - those are the ones that can stall on a registry that does
+      # not answer, and a stall there should not be what hides a known advisory.
+      #
+      # It refuses rather than skips: an absent mount, a database older than
+      # seven days, or an ecosystem the cache does not hold each fail the job,
+      # because each of them otherwise prints a clean summary over a cache that
+      # answered nothing.
+      # That the database actually answers is proven on the ci-actions side,
+      # where one of two calls scans a tree that MUST be refused - a valid
+      # zero-entry npm zip gives `No issues found` and exit 0 exactly as the real
+      # 216 MB one does on a clean tree, so a green scan here is not by itself
+      # evidence of a database with content in it.
+      #
+      # A finding that has to be lived with goes in an osv-scanner.toml in the
+      # repo root, as an [[IgnoredVulns]] entry carrying an id and a reason; the
+      # scanner reads that file natively. There is none yet - the lockfile was
+      # scanned by hand on 2026-09-25 and was clean at 288 packages.
+      - uses: https://git-ci.pebblecove.xyz:8447/bjorn/ci-actions/osv-scan@v1
       # A build that cannot reach the registry and a build with a real error are
       # the same red tick from the outside, minutes apart. This asks the one
       # question that tells them apart, and answers it in about a second when
