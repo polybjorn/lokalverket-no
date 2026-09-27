@@ -25,8 +25,8 @@ Public repo, Norwegian-language site. Business context note:
   see below. `ci.yml` builds, lints and scans the lockfile for known advisories
   against the runner host's offline OSV cache (`bjorn/ci-actions/osv-scan`),
   `delete-merged-branch.yml` sweeps merged `herd/` branches on merge and daily,
-  `deps-update.yml` opens the monthly dependency PR, `merge-audit.yml` checks
-  merges actually landed
+  `merge-audit.yml` checks merges actually landed. **No dependency-update job
+  lives here**: Renovate raises the npm bumps, see Dependencies below
 - `.nvmrc` - the node version, in one place. Both the gate and the Pages deploy
   read it; `ci.yml` fails if the runner disagrees with it
 - `check-workflow-inputs.sh`, `check-merged-prs.mjs` - the checks the gate runs
@@ -58,6 +58,31 @@ Public repo, Norwegian-language site. Business context note:
 - `npm run dev` - dev server on http://localhost:4321
 - `npm run build` - static output to `dist/`
 
+## Dependencies
+
+**Renovate owns npm updates, and nothing in this repo raises them.** It runs on
+the hypervisor as a systemd service (nixfleet `modules/renovate.nix`) rather than
+as a workflow, and it is configured there: `bjorn/lokalverket-no` is in its
+`repositories` list with `enabledManagers = [ "npm" "github-actions" ]`, the npm
+rule groups every bump into one PR on `renovate/npm-dependencies` scheduled
+before 6am on Monday, and it carries `pkgs.nodejs` so the lockfile is refreshed
+instead of being left stale against a moved `package.json`.
+
+So there is nothing to run from this tree and nothing here to read for state: the
+state is the Dependency Dashboard issue (#38), which lists the detected npm and
+github-actions dependencies and anything awaiting its schedule.
+
+`deps-update.yml` did the same job monthly until 2026-09-27, when it was removed
+for raising the same bump as a second PR - not for being broken. Two things it
+carried are covered elsewhere rather than lost:
+
+- its own `npm ci` plus `npm run build`, which it ran because Forgejo suppresses
+  workflows triggered by the automatic token. Renovate pushes with its own user
+  token, so the gate is not suppressed: `CI / build (pull_request)` ran green on
+  Renovate's npm PR #39.
+- its `npm audit`, now the OSV scan in `ci.yml` against the runner host's offline
+  cache, which runs on every PR instead of once a month.
+
 ## Branches
 
 **`main` is where the site lives.** Every push to it deploys to GitHub Pages.
@@ -69,15 +94,16 @@ on the merge and again every morning until the ref actually stays gone.
 Two kinds of branch are expected to exist and are not WIP:
 
 - `herd/<topic>` - agent work, deleted on merge
-- `deps-update` - the rolling branch `deps-update.yml` force-pushes each month.
-  It is deliberately outside the `herd/` prefix so the cleanup job leaves it
-  alone; it is meant to persist and be reused, not deleted
+- `renovate/*` - Renovate's branches, force-pushed and reused until the PR
+  merges. They sit outside the `herd/` prefix, which is what the sweep matches
+  (`refs/heads/herd/*`), so it leaves them alone
 
-This said "single branch: `main`" until 2026-09-14, and stopped being true when
-the scheduled dependency job landed. Before that, a standing `design` branch
-existed until 2026-07-31 and was dropped - it made the merge, not the code, the
-risky step, and it never actually kept anything private: the repo is public, so
-a file on any pushed branch is readable.
+This said "single branch: `main`" until 2026-09-14, when the scheduled dependency
+job landed; that job went on 2026-09-27 and Renovate's branches took its place,
+so the shape holds and only the second entry changed hands. Before that, a
+standing `design` branch existed until 2026-07-31 and was dropped - it made the
+merge, not the code, the risky step, and it never actually kept anything private:
+the repo is public, so a file on any pushed branch is readable.
 
 **The repo is public and the domain is live**, so treat both as published:
 
