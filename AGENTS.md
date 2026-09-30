@@ -22,8 +22,9 @@ Public repo, Norwegian-language site. Business context note:
   and `public/favicon.svg` is a placeholder "L" tile. DESIGN.md tracks it; the
   mark gets drawn in Affinity, not hand-edited here
 - `.forgejo/workflows/` - the gate on the self-hosted runner. Not the deploy;
-  see below. `ci.yml` builds, lints and scans the lockfile for known advisories
+  see below. `ci.yml` builds, lints, scans the lockfile for known advisories
   against the runner host's offline OSV cache (`bjorn/ci-actions/osv-scan`),
+  runs offline semgrep over the `.mjs` files (`bjorn/ci-actions/semgrep-scan`),
   `delete-merged-branch.yml` sweeps merged `herd/` branches on merge and daily,
   `merge-audit.yml` checks merges actually landed. **No dependency-update job
   lives here**: Renovate raises the npm bumps, see Dependencies below

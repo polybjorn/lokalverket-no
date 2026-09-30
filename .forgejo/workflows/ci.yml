@@ -175,6 +175,42 @@ jobs:
       - name: The sweep still behaves
         run: ./sweep-merged-branches.test.mjs
 
+  # Offline semgrep over the tree, from bjorn/ci-actions#29, which rolled the
+  # gate out to four repos and left the three Astro sites off the list (#51,
+  # #48). Copied from what landed in bjorn/polybjorn-en (#122). Not a required
+  # context - that is a branch-protection change and admin-only - so it is
+  # advisory until Bjorn makes it required.
+  static:
+    # The `semgrep` label and nowhere else: semgrep publishes no standalone
+    # binary, so nixfleet #1106 put the official image behind a label of its own,
+    # and semgrep-scan refuses to run anywhere it cannot find /semgrep.
+    runs-on: semgrep
+    timeout-minutes: 10
+    steps:
+      # Alpine, so no node - the composite checkout rather than actions/checkout.
+      - uses: https://git-ci.pebblecove.xyz:8447/bjorn/ci-actions/checkout@v1
+        with:
+          token: ${{ github.token }}
+      - uses: https://git-ci.pebblecove.xyz:8447/bjorn/ci-actions/semgrep-scan@v1
+        with:
+          # These two rather than `default` (1073 rules, half of it python): the
+          # tracked code is five .mjs files, astro.config.mjs plus the two CI
+          # check scripts and their tests. semgrep does not parse .astro, so the
+          # two .astro files and any script blocks inside them are out of scope.
+          #
+          # No .semgrepignore, unlike polybjorn-en: semgrep's built-in list drops
+          # `tests/` and `test/`, and nothing here lives under either. A green
+          # tick cannot tell "0 findings" from "0 files matched", so read the
+          # `Ran N rules on M files` line off the job rather than trusting this.
+          rulesets: javascript typescript
+          # Every finding, not only what a change introduces, which is where
+          # bjorn/media-tools landed after #33 and #34. `new` needs a baseline
+          # commit, history on the checkout and a special case for
+          # workflow_dispatch, and buys nothing on a tree this small. A real
+          # finding gets fixed, or a trailing `// nosemgrep: <rule-id>` with the
+          # reason above it, rather than this moving back to `new`.
+          fail-on: any
+
   attribution:
     runs-on: docker
     timeout-minutes: 5
