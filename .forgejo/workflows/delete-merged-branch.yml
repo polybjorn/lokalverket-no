@@ -46,6 +46,24 @@ on:
 
 jobs:
   sweep:
+    # A CLOSE WITHOUT A MERGE HAS NOTHING TO SWEEP AND CANNOT CHECK OUT. Deleting
+    # a head branch on this forge closes its pull request as a side effect, so the
+    # ordinary unmerged close arrives with GITHUB_SHA naming a commit left only
+    # under refs/pull/N/head. checkout@v1 at depth 0 fetches
+    # +refs/heads/*:refs/remotes/origin/* and nothing else, then verifies the ref,
+    # so it exits 1. Measured on run 156: red two seconds after the close of the
+    # specimen pull request #53, which was opened to produce this event on purpose
+    # (#45).
+    #
+    # THE event_name TERM IS NOT REDUNDANT. On schedule and workflow_dispatch
+    # there is no github.event.pull_request at all, so the merged term alone is
+    # false and would silence the 05:07 sweep, which is the whole backstop.
+    #
+    # The sibling repos spell this as two jobs, with `if: github.event_name !=
+    # 'pull_request'` on the sweep half. This repo deliberately has one job that
+    # runs on the merge as well, for the reason in the header, so the merge has to
+    # stay in.
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: docker
     # Four attempts five seconds apart is about twenty seconds of deleting in the
     # worst case, on top of the clone. Ten minutes is far more than that on
