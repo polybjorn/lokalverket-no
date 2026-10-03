@@ -46,6 +46,12 @@ Public repo, Norwegian-language site. Business context note:
   first failure, since the forge restores the ref within about two seconds of a
   successful delete. The preserved file is data, not code, so taking a branch off
   the list does not need a code review
+- `build-preview.mjs` + `preview-core.mjs` and its `.test.mjs` - `npm run
+  preview:build`, the branch build for the hypervisor's site-preview server.
+  It sets `PREVIEW_BASE`, which `astro.config.mjs` takes as the base; unset, the
+  build is the deploy build. The slug rule is copied by hand from nixfleet's
+  `site-preview`, and the test pins it. A root path written by hand in a page
+  has to go through `import.meta.env.BASE_URL` or it 404s on a preview
 - `merge-audit-acknowledged.json` - orphaned merges already re-landed, so the
   daily audit does not fail on them for a week. A record of what happened, not
   a change of behaviour, which is why it is data rather than code
