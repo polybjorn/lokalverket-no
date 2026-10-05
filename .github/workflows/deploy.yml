@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Six hours IS the default here, unlike on the forge runner: these are
+    # GitHub's hosted runners. A hung build would sit at "running" for that long
+    # and the site would keep serving the previous deploy with nothing saying so.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      # withastro/action takes a node-version and NOTHING else: its inputs are
+      # node-version, package-manager and path. It has no node-version-file, and
+      # an unknown input is silently ignored rather than rejected, so passing one
+      # does not fail the step - it drops the pin and the action falls back to its
+      # default of Node 20, which Astro 7 then refuses (>=22.12.0). That is exactly
+      # how 60e02c2 broke this deploy. Read the file and hand over its contents.
+      - id: node
+        run: echo "version=$(tr -d ' \r\n' < .nvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: withastro/action@v6
+        with:
+          # .nvmrc stays the one place the version is written, so moving it is a
+          # one-line change that the forge gate can check against its runner.
+          node-version: ${{ steps.node.outputs.version }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

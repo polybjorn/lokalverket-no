@@ -1,0 +1,31 @@
+# actionlint knows GitHub's hosted runner labels and nothing else, so every
+# `runs-on:` in .forgejo/workflows reads as an unknown label without this.
+# Measured: three errors before this file existed, zero after.
+#
+# The three names are the ones nixfleet modules/forgejo-runner.nix lists for
+# this runner, read from that file. Its own comment adds that a label also has
+# to be registered server-side under the same name, because scheduling matches
+# the server record rather than the runner's list - that part is quoted from
+# nixfleet and is not something testable from this repo, which has no way to
+# see the registration. If a job here ever queues forever on a label that looks
+# right, that claim is the first thing to go and check rather than trust.
+self-hosted-runner:
+  labels:
+    - docker
+    - python
+    - nix
+    # Not in that file: semgrep has a runner and a label of its own (nixfleet
+    # #1106), which the `static` job in ci.yml runs on.
+    - semgrep
+
+# The `attribution` job takes bjorn/ci-actions/attribution@v1 by full URL,
+# including the port, because a bare `bjorn/ci-actions/...` resolves against
+# DEFAULT_ACTIONS_URL - data.forgejo.org - rather than this forge. actionlint
+# only knows GitHub's `{owner}/{repo}@{ref}` shape and calls the URL form
+# invalid, so the rule is switched off for this tree and this tree only:
+# .github/workflows really does run on GitHub, where the URL form would be a
+# genuine error. Measured with actionlint 1.7.12, the version ci.yml pins.
+paths:
+  .forgejo/workflows/**:
+    ignore:
+      - 'specifying action .+ in invalid format because owner and repo and ref should not be empty'

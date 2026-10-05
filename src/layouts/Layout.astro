@@ -1,0 +1,29 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Lokalverket' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    {/* Site-wide while the site is a work-in-progress holding page. Drop this
+        line at launch; public/robots.txt keeps crawling allowed so the tag is
+        actually seen. */}
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1e2228" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
