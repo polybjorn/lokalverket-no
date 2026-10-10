@@ -1,6 +1,6 @@
 # Lokalverket
 
-Website for [lokalverket.no](https://lokalverket.no), a static Norwegian-language Astro site. It is a work in progress: the live site serves a holding page and is set to `noindex`.
+Website for [lokalverket.no](https://lokalverket.no), a static Norwegian-language Astro site. Retired 2026-10-10: every path redirects to [polybjorn.com](https://polybjorn.com/).
 
 ## Quick start
 

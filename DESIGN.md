@@ -65,12 +65,8 @@ Scale (1.25 minor third): `--text-xs` -> `--text-4xl`. Headings use
 - `--content-width` 64rem for page width, `--measure` 38rem for readable text.
 - `--radius` 4px (kept tight - engineered, not soft).
 
-## Open / next
+## Status
 
-- Lock the logo mark in Affinity, then replace `public/favicon.svg` and add the
-  real favicon set.
-- Finalise oxblood/petrol hues on screen; update tokens here.
-- Decide whether body moves to a self-hosted grotesque.
-- Homepage sections (hero / services / about / contact) are built but pulled
-  from the live site while it is work-in-progress; they sit in git history at
-  `a1b31c9`. Restore them once the copy, the mark and the org.nr are settled.
+Closed 2026-10-10: the site redirects to polybjorn.com and the brand is
+archived under `Polybjorn/Archive/`. This guide records the site as it stood;
+the last full homepage is at `a1b31c9`.

@@ -1,0 +1,20 @@
+---
+// GitHub Pages cannot answer with a 301, so a zero-second refresh plus a
+// canonical stands in for one; both read as a permanent move to crawlers.
+const target = 'https://polybjorn.com/';
+---
+
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={target} />
+    <meta name="robots" content="noindex" />
+    <title>Lokalverket er nå Polybjorn</title>
+  </head>
+  <body>
+    <p>Lokalverket er nå <a href={target}>polybjorn.com</a>.</p>
+  </body>
+</html>
